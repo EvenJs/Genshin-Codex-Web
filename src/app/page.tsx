@@ -1,55 +1,62 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { apiFetch } from '@/lib/apiClient';
-import type { Achievement, AchievementListResponse } from '@/types/achievement';
-
-const CATEGORIES = ['全部', 'Wonders of the World', 'Memories of the Heart', 'Mondstadt', 'Liyue', 'Inazuma', 'Sumeru', 'Fontaine', 'Natlan'];
-const REGIONS = ['全部', 'Mondstadt', 'Liyue', 'Inazuma', 'Sumeru', 'Fontaine', 'Natlan'];
+import { useState, useEffect } from 'react';
+import { usePublicAchievements } from '@/hooks/usePublicAchievements';
+import { AchievementList } from '@/components/achievements/AchievementList';
 
 export default function Home() {
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [q, setQ] = useState('');
-  const [category, setCategory] = useState('全部');
-  const [region, setRegion] = useState('全部');
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
+  const [category, setCategory] = useState('');
+  const [region, setRegion] = useState('');
 
-  const fetchAchievements = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (category !== '全部') params.set('category', category);
-    if (region !== '全部') params.set('region', region);
-    params.set('page', String(page));
-    params.set('pageSize', String(pageSize));
-
-    try {
-      const data = await apiFetch<AchievementListResponse>(
-        'GET',
-        `/achievements?${params.toString()}`
-      );
-      setAchievements(data.items);
-      setTotal(data.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [q, category, region, page]);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [allRegions, setAllRegions] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchAchievements();
-  }, [fetchAchievements]);
+    const timer = setTimeout(() => {
+      setDebouncedQ(searchInput);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const { items, total, pageSize, loading, error } = usePublicAchievements({
+    page,
+    q: debouncedQ || undefined,
+    category: category || undefined,
+    region: region || undefined,
+  });
 
   const totalPages = Math.ceil(total / pageSize);
+
+  // 仅在无筛选条件时更新选项列表
+  useEffect(() => {
+    if (!debouncedQ && !category && !region && items.length > 0) {
+      const categorySet = new Set<string>();
+      const regionSet = new Set<string>();
+
+      items.forEach((item) => {
+        if (item.category) categorySet.add(item.category);
+        if (item.region) regionSet.add(item.region);
+      });
+
+      setAllCategories(Array.from(categorySet).sort());
+      setAllRegions(Array.from(regionSet).sort());
+    }
+  }, [items, debouncedQ, category, region]);
+
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
+    setPage(1);
+  };
+
+  const handleRegionChange = (value: string) => {
+    setRegion(value);
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -65,16 +72,12 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
-        {/* 搜索和筛选 */}
         <div className="mb-6 space-y-4">
           <input
             type="text"
             placeholder="搜索成就名称或描述..."
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPage(1);
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
 
@@ -83,13 +86,11 @@ export default function Home() {
               <label className="text-sm text-zinc-600 dark:text-zinc-400">分类:</label>
               <select
                 value={category}
-                onChange={(e) => {
-                  setCategory(e.target.value);
-                  setPage(1);
-                }}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
-                {CATEGORIES.map((c) => (
+                <option value="">All</option>
+                {allCategories.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -99,13 +100,11 @@ export default function Home() {
               <label className="text-sm text-zinc-600 dark:text-zinc-400">地区:</label>
               <select
                 value={region}
-                onChange={(e) => {
-                  setRegion(e.target.value);
-                  setPage(1);
-                }}
+                onChange={(e) => handleRegionChange(e.target.value)}
                 className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
-                {REGIONS.map((r) => (
+                <option value="">All</option>
+                {allRegions.map((r) => (
                   <option key={r} value={r}>{r}</option>
                 ))}
               </select>
@@ -113,7 +112,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 状态提示 */}
         {loading && (
           <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
             加载中...
@@ -126,54 +124,14 @@ export default function Home() {
           </div>
         )}
 
-        {/* 成就列表 */}
         {!loading && !error && (
           <>
             <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
               共 {total} 个成就
             </div>
 
-            <div className="space-y-3">
-              {achievements.map((achievement) => (
-                <Link
-                  key={achievement.id}
-                  href={`/achievements/${achievement.id}`}
-                  className="block rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-blue-600 dark:hover:bg-zinc-750"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {achievement.name}
-                        </h2>
-                        {achievement.isHidden && (
-                          <span className="rounded bg-zinc-200 px-1.5 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
-                            隐藏
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                        {achievement.description}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <span className="text-sm font-medium">
-                        {achievement.rewardPrimogems}
-                      </span>
-                      <span className="text-xs">原石</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <AchievementList items={items} />
 
-            {achievements.length === 0 && (
-              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                没有找到匹配的成就
-              </div>
-            )}
-
-            {/* 分页 */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-center gap-2">
                 <button
