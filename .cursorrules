@@ -1,0 +1,5 @@
+- Follow CLAUDE.md as the single source of truth.
+- Centralize API calls in src/lib/apiClient.ts.
+- Centralize session/token logic in src/lib/session.ts.
+- Always implement loading + error UI states.
+- Never hardcode API base URL; use NEXT_PUBLIC_API_BASE_URL.
