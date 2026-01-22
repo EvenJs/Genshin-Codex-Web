@@ -10,6 +10,7 @@ const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 type StatusFilter = 'all' | 'incomplete' | 'completed';
 
 export default function MyAchievementsPage() {
+  const [mounted, setMounted] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [achievements, setAchievements] = useState<UserAchievement[]>([]);
@@ -23,8 +24,9 @@ export default function MyAchievementsPage() {
 
   const pageSize = 20;
 
-  // 检查 token
+  // 挂载后检查 token
   useEffect(() => {
+    setMounted(true);
     const token = getToken();
     if (!token) {
       window.location.href = '/login';
@@ -33,6 +35,8 @@ export default function MyAchievementsPage() {
 
   // 拉取账号列表
   useEffect(() => {
+    if (!mounted) return;
+
     async function fetchAccounts() {
       try {
         const data = await apiFetch<Account[]>('/accounts');
@@ -52,7 +56,7 @@ export default function MyAchievementsPage() {
     if (getToken()) {
       fetchAccounts();
     }
-  }, []);
+  }, [mounted]);
 
   // 拉取成就列表
   const fetchAchievements = useCallback(async () => {
@@ -121,7 +125,8 @@ export default function MyAchievementsPage() {
     return account.nickname || `${account.uid} (${account.server})`;
   };
 
-  if (!getToken()) {
+  // 挂载前不渲染，避免 hydration 错误
+  if (!mounted) {
     return null;
   }
 
