@@ -22,9 +22,9 @@ export interface UserAchievementsResponse {
   page: number;
   pageSize: number;
   stats: {
-    completed: number;
-    total: number;
-    incomplete: number;
+    completedCount: number;
+    totalCount: number;
+    incompleteCount: number;
     primogemsEarned: number;
     primogemsTotal: number;
   };

@@ -108,14 +108,16 @@ export default function MyAchievementsPage() {
   const handleToggleCompleted = async (achievementId: string, completed: boolean) => {
     if (!selectedAccountId) return;
 
+    setLoading(true);
     try {
       await apiFetch(`/accounts/${selectedAccountId}/progress/${achievementId}`, {
         method: 'PUT',
         body: JSON.stringify({ completed }),
       });
-      fetchAchievements();
+      await fetchAchievements();
     } catch (err) {
       setError(err instanceof Error ? err.message : '更新失败');
+      setLoading(false);
     }
   };
 
@@ -163,15 +165,15 @@ export default function MyAchievementsPage() {
         {stats && (
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.completed}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.completedCount}</div>
               <div className="text-sm text-zinc-500">已完成</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.incomplete}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.incompleteCount}</div>
               <div className="text-sm text-zinc-500">未完成</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.total}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.totalCount}</div>
               <div className="text-sm text-zinc-500">总数</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">

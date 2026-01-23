@@ -17,9 +17,13 @@ export async function apiFetch<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const method = options?.method?.toUpperCase() ?? 'GET';
+  const isGet = method === 'GET';
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
+    ...(isGet && { cache: 'no-store' as const }),
   });
 
   if (response.status === 401) {
