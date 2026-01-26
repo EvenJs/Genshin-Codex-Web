@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePublicAchievements } from '@/hooks/usePublicAchievements';
 import { AchievementList } from '@/components/achievements/AchievementList';
 
@@ -11,8 +11,11 @@ export function AchievementsPage() {
   const [category, setCategory] = useState('');
   const [region, setRegion] = useState('');
 
-  const [allCategories, setAllCategories] = useState<string[]>([]);
-  const [allRegions, setAllRegions] = useState<string[]>([]);
+  // Fetch unfiltered data for filter options
+  const { items: allItems } = usePublicAchievements({
+    page: 1,
+    limit: 1000, // Fetch enough to get all categories/regions
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -32,20 +35,21 @@ export function AchievementsPage() {
 
   const totalPages = Math.ceil(total / pageSize);
 
-  useEffect(() => {
-    if (!debouncedQ && !category && !region && items.length > 0) {
-      const categorySet = new Set<string>();
-      const regionSet = new Set<string>();
+  // Compute filter options from unfiltered items
+  const { allCategories, allRegions } = useMemo(() => {
+    const categorySet = new Set<string>();
+    const regionSet = new Set<string>();
 
-      items.forEach((item) => {
-        if (item.category) categorySet.add(item.category);
-        if (item.region) regionSet.add(item.region);
-      });
+    allItems.forEach((item) => {
+      if (item.category) categorySet.add(item.category);
+      if (item.region) regionSet.add(item.region);
+    });
 
-      setAllCategories(Array.from(categorySet).sort());
-      setAllRegions(Array.from(regionSet).sort());
-    }
-  }, [items, debouncedQ, category, region]);
+    return {
+      allCategories: Array.from(categorySet).sort(),
+      allRegions: Array.from(regionSet).sort(),
+    };
+  }, [allItems]);
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
@@ -61,12 +65,8 @@ export function AchievementsPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mx-auto max-w-5xl px-4 py-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            Genshin Codex
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            成就库浏览器
-          </p>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Genshin Codex</h1>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">成就库浏览器</p>
         </div>
       </header>
 
@@ -90,7 +90,9 @@ export function AchievementsPage() {
               >
                 <option value="">All</option>
                 {allCategories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -104,7 +106,9 @@ export function AchievementsPage() {
               >
                 <option value="">All</option>
                 {allRegions.map((r) => (
-                  <option key={r} value={r}>{r}</option>
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
                 ))}
               </select>
             </div>
@@ -112,22 +116,14 @@ export function AchievementsPage() {
         </div>
 
         {loading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-            加载中...
-          </div>
+          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
-        {error && (
-          <div className="py-12 text-center text-red-500">
-            {error}
-          </div>
-        )}
+        {error && <div className="py-12 text-center text-red-500">{error}</div>}
 
         {!loading && !error && (
           <>
-            <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
-              共 {total} 个成就
-            </div>
+            <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">共 {total} 个成就</div>
 
             <AchievementList items={items} />
 

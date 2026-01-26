@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { getToken, clearToken } from '@/lib/authToken';
-import { apiFetch } from '@/lib/apiFetch';
+import { getToken, getRefreshToken, clearAllTokens } from '@/lib/authToken';
+import { apiFetch } from '@/lib/apiClient';
 import type { Account } from '@/types/account';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
@@ -79,10 +79,16 @@ export function Header() {
 
   const handleLogout = async () => {
     setIsLoggedIn(false);
+    const refreshToken = getRefreshToken();
     try {
-      await apiFetch('/auth/logout', { method: 'POST' });
+      if (refreshToken) {
+        await apiFetch('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        });
+      }
     } catch {}
-    clearToken();
+    clearAllTokens();
     window.location.href = '/login';
   };
 
@@ -161,7 +167,12 @@ export function Header() {
                   >
                     <span>{selectedAccount?.nickname || selectedAccount?.uid || '选择账号'}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                   </button>
 
@@ -181,7 +192,9 @@ export function Header() {
                                   key={account.id}
                                   onClick={() => handleSelectAccount(account.id)}
                                   className={`flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700 ${
-                                    selectedAccountId === account.id ? 'bg-blue-50 dark:bg-blue-950' : ''
+                                    selectedAccountId === account.id
+                                      ? 'bg-blue-50 dark:bg-blue-950'
+                                      : ''
                                   }`}
                                 >
                                   <div className="min-w-0 flex-1">
@@ -223,7 +236,9 @@ export function Header() {
                                 className="w-full rounded border border-zinc-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                               >
                                 {SERVERS.map((s) => (
-                                  <option key={s.value} value={s.value}>{s.label}</option>
+                                  <option key={s.value} value={s.value}>
+                                    {s.label}
+                                  </option>
                                 ))}
                               </select>
                               <input

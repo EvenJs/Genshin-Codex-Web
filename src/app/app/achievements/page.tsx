@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getToken } from '@/lib/authToken';
-import { apiFetch } from '@/lib/apiFetch';
+import { apiFetch } from '@/lib/apiClient';
 import type { Account, UserAchievement, UserAchievementsResponse } from '@/types/account';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
@@ -73,7 +73,7 @@ export default function MyAchievementsPage() {
 
     try {
       const data = await apiFetch<UserAchievementsResponse>(
-        `/accounts/${selectedAccountId}/achievements?${params.toString()}`
+        `/accounts/${selectedAccountId}/achievements?${params.toString()}`,
       );
       setAchievements(data.items);
       setTotal(data.total);
@@ -136,9 +136,7 @@ export default function MyAchievementsPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mx-auto max-w-5xl px-4 py-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            我的成就
-          </h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">我的成就</h1>
         </div>
       </header>
 
@@ -165,15 +163,21 @@ export default function MyAchievementsPage() {
         {stats && (
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.completedCount}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats.completedCount}
+              </div>
               <div className="text-sm text-zinc-500">已完成</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.incompleteCount}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats.incompleteCount}
+              </div>
               <div className="text-sm text-zinc-500">未完成</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.totalCount}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats.totalCount}
+              </div>
               <div className="text-sm text-zinc-500">总数</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
@@ -181,7 +185,9 @@ export default function MyAchievementsPage() {
               <div className="text-sm text-zinc-500">已获原石</div>
             </div>
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{stats.primogemsTotal}</div>
+              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+                {stats.primogemsTotal}
+              </div>
               <div className="text-sm text-zinc-500">总原石</div>
             </div>
           </div>
@@ -224,25 +230,17 @@ export default function MyAchievementsPage() {
 
         {/* 列表 */}
         {loading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-            加载中...
-          </div>
+          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
-        {error && (
-          <div className="py-12 text-center text-red-500">{error}</div>
-        )}
+        {error && <div className="py-12 text-center text-red-500">{error}</div>}
 
         {!loading && !error && (
           <>
-            <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
-              共 {total} 个成就
-            </div>
+            <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">共 {total} 个成就</div>
 
             {achievements.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                没有找到成就
-              </div>
+              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">没有找到成就</div>
             ) : (
               <ul className="space-y-3">
                 {achievements.map((item) => (
@@ -258,7 +256,9 @@ export default function MyAchievementsPage() {
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className={`font-medium ${item.completed ? 'text-zinc-400 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
+                        <h3
+                          className={`font-medium ${item.completed ? 'text-zinc-400 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}
+                        >
                           {item.name}
                         </h3>
                         {item.completed && (

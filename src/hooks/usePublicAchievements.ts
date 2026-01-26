@@ -8,6 +8,7 @@ const PAGE_SIZE = 20;
 
 export interface UsePublicAchievementsParams {
   page?: number;
+  limit?: number;
   q?: string;
   category?: string;
   region?: string;
@@ -23,9 +24,10 @@ export interface UsePublicAchievementsResult {
 }
 
 export function usePublicAchievements(
-  params: UsePublicAchievementsParams = {}
+  params: UsePublicAchievementsParams = {},
 ): UsePublicAchievementsResult {
-  const { page = 1, q, category, region } = params;
+  const { page = 1, limit, q, category, region } = params;
+  const pageSize = limit ?? PAGE_SIZE;
 
   const [items, setItems] = useState<Achievement[]>([]);
   const [total, setTotal] = useState(0);
@@ -41,16 +43,15 @@ export function usePublicAchievements(
 
       const searchParams = new URLSearchParams();
       searchParams.set('page', String(page));
-      searchParams.set('pageSize', String(PAGE_SIZE));
+      searchParams.set('pageSize', String(pageSize));
       if (q) searchParams.set('q', q);
       if (category) searchParams.set('category', category);
       if (region) searchParams.set('region', region);
 
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/achievements?${searchParams.toString()}`,
-          { signal: controller.signal }
-        );
+        const response = await fetch(`${API_BASE_URL}/achievements?${searchParams.toString()}`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -76,13 +77,13 @@ export function usePublicAchievements(
     return () => {
       controller.abort();
     };
-  }, [page, q, category, region]);
+  }, [page, pageSize, q, category, region]);
 
   return {
     items,
     total,
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
     loading,
     error,
   };

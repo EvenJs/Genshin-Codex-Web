@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { setToken } from '@/lib/authToken';
+import { setTokens } from '@/lib/authToken';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 
 interface LoginResponse {
   accessToken: string;
+  refreshToken: string;
 }
 
 export default function LoginPage() {
@@ -33,7 +34,7 @@ export default function LoginPage() {
       }
 
       const data: LoginResponse = await response.json();
-      setToken(data.accessToken);
+      setTokens(data.accessToken, data.refreshToken);
       window.location.href = '/app/achievements';
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败');
@@ -51,9 +52,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              邮箱
-            </label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">邮箱</label>
             <input
               type="email"
               value={email}
@@ -64,9 +63,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              密码
-            </label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">密码</label>
             <input
               type="password"
               value={password}
@@ -76,9 +73,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <button
             type="submit"

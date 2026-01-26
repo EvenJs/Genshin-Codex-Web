@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { setToken } from '@/lib/authToken';
+import { setTokens } from '@/lib/authToken';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 
 interface AuthResponse {
   accessToken?: string;
+  refreshToken?: string;
 }
 
 export default function RegisterPage() {
@@ -50,8 +51,8 @@ export default function RegisterPage() {
       const registerData: AuthResponse = await registerRes.json();
 
       // 如果返回 token，直接使用
-      if (registerData.accessToken) {
-        setToken(registerData.accessToken);
+      if (registerData.accessToken && registerData.refreshToken) {
+        setTokens(registerData.accessToken, registerData.refreshToken);
         window.location.href = '/app/achievements';
         return;
       }
@@ -70,8 +71,8 @@ export default function RegisterPage() {
 
       const loginData: AuthResponse = await loginRes.json();
 
-      if (loginData.accessToken) {
-        setToken(loginData.accessToken);
+      if (loginData.accessToken && loginData.refreshToken) {
+        setTokens(loginData.accessToken, loginData.refreshToken);
         window.location.href = '/app/achievements';
       } else {
         throw new Error('登录响应异常，请手动登录');
@@ -92,9 +93,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              邮箱
-            </label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">邮箱</label>
             <input
               type="email"
               value={email}
@@ -105,9 +104,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              密码
-            </label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">密码</label>
             <input
               type="password"
               value={password}
@@ -118,9 +115,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              确认密码
-            </label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">确认密码</label>
             <input
               type="password"
               value={confirmPassword}
@@ -130,9 +125,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm">{error}</div>}
 
           <button
             type="submit"

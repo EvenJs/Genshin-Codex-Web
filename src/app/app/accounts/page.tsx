@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { getToken } from '@/lib/authToken';
-import { apiFetch } from '@/lib/apiFetch';
+import { apiFetch } from '@/lib/apiClient';
 import type { Account } from '@/types/account';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
@@ -151,9 +151,7 @@ export default function AccountsPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-            账号管理
-          </h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">账号管理</h1>
           <Link
             href="/app/achievements"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white font-medium hover:bg-blue-700"
@@ -164,9 +162,7 @@ export default function AccountsPage() {
 
         {/* 新增账号表单 */}
         <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">
-            新增账号
-          </h2>
+          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">新增账号</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
@@ -211,9 +207,7 @@ export default function AccountsPage() {
               </div>
             </div>
 
-            {formError && (
-              <div className="text-red-500 text-sm">{formError}</div>
-            )}
+            {formError && <div className="text-red-500 text-sm">{formError}</div>}
 
             <button
               type="submit"
@@ -226,19 +220,13 @@ export default function AccountsPage() {
         </div>
 
         {/* 账号列表 */}
-        <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">
-          我的账号
-        </h2>
+        <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">我的账号</h2>
 
         {loading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-            加载中...
-          </div>
+          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
-        {error && (
-          <div className="py-4 text-center text-red-500">{error}</div>
-        )}
+        {error && <div className="py-4 text-center text-red-500">{error}</div>}
 
         {!loading && (
           <>
