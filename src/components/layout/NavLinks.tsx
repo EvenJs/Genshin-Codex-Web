@@ -15,7 +15,19 @@ export function NavLinks({ isLoggedIn, onLogout }: NavLinksProps) {
           href="/app/achievements"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
-          My Achievements
+          Achievements
+        </Link>
+        <Link
+          href="/app/artifacts"
+          className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          Artifacts
+        </Link>
+        <Link
+          href="/app/characters"
+          className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          Characters
         </Link>
         <button
           onClick={onLogout}

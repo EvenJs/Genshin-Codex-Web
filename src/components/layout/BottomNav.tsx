@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { Trophy, User, Home, LogIn } from 'lucide-react';
+import { Trophy, User, Home, LogIn, Gem, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
@@ -42,6 +42,8 @@ export function BottomNav() {
   const isAchievementsActive =
     pathname === '/achievements' || pathname.startsWith('/achievements/');
   const isMyAchievementsActive = pathname === '/app/achievements';
+  const isArtifactsActive = pathname === '/app/artifacts';
+  const isCharactersActive = pathname.startsWith('/app/characters');
   const isAccountsActive = pathname === '/app/accounts';
 
   return (
@@ -59,14 +61,20 @@ export function BottomNav() {
             <NavItem
               href="/app/achievements"
               icon={<Trophy className="h-5 w-5" />}
-              label="My Progress"
+              label="Progress"
               isActive={isMyAchievementsActive}
             />
             <NavItem
-              href="/app/accounts"
-              icon={<User className="h-5 w-5" />}
-              label="Accounts"
-              isActive={isAccountsActive}
+              href="/app/artifacts"
+              icon={<Gem className="h-5 w-5" />}
+              label="Artifacts"
+              isActive={isArtifactsActive}
+            />
+            <NavItem
+              href="/app/characters"
+              icon={<Users className="h-5 w-5" />}
+              label="Characters"
+              isActive={isCharactersActive}
             />
           </>
         ) : !isLoading ? (

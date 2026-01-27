@@ -64,4 +64,21 @@ export const cacheKeys = {
     const base = '/achievements';
     return params ? `${base}?${params.toString()}` : base;
   },
+  // Artifacts
+  artifactSets: () => '/artifact-sets',
+  artifactSet: (id: string) => `/artifact-sets/${id}`,
+  accountArtifacts: (accountId: string, params?: URLSearchParams) => {
+    const base = `/accounts/${accountId}/artifacts`;
+    return params ? `${base}?${params.toString()}` : base;
+  },
+  accountArtifactStats: (accountId: string) =>
+    `/accounts/${accountId}/artifacts/stats`,
+  accountArtifact: (accountId: string, artifactId: string) =>
+    `/accounts/${accountId}/artifacts/${artifactId}`,
+  // Characters
+  characters: () => '/characters',
+  character: (id: string) => `/characters/${id}`,
+  accountCharacters: (accountId: string) => `/accounts/${accountId}/characters`,
+  accountCharacter: (accountId: string, characterId: string) =>
+    `/accounts/${accountId}/characters/${characterId}`,
 };
