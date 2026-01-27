@@ -1,12 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getToken } from '@/lib/authToken';
-import { apiFetch } from '@/lib/apiClient';
-import type { Account } from '@/types/account';
-
-const SELECTED_ACCOUNT_KEY = 'selected_account_id';
+import { useAuth } from '@/hooks/useAuth';
 
 const SERVERS = [
   { value: 'cn_gf01', label: '天空岛 (cn_gf01)' },
@@ -18,58 +14,37 @@ const SERVERS = [
 ];
 
 export default function AccountsPage() {
-  const [mounted, setMounted] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    isLoggedIn,
+    isLoading,
+    accounts,
+    selectedAccountId,
+    accountsLoading,
+    addAccount,
+    deleteAccount,
+    selectAccount,
+  } = useAuth();
 
-  // 表单状态
+  // Form state
   const [uid, setUid] = useState('');
   const [server, setServer] = useState(SERVERS[0].value);
   const [nickname, setNickname] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // 删除状态
+  // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    setMounted(true);
-    const token = getToken();
-    if (!token) {
+    if (!isLoading && !isLoggedIn) {
       window.location.href = '/login';
-      return;
     }
-
-    const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-    setSelectedAccountId(savedId);
-  }, []);
-
-  const fetchAccounts = useCallback(async () => {
-    try {
-      const data = await apiFetch<Account[]>('/accounts');
-      setAccounts(data);
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载账号失败');
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    if (getToken()) {
-      fetchAccounts();
-    }
-  }, [mounted, fetchAccounts]);
+  }, [isLoading, isLoggedIn]);
 
   const handleSelect = (accountId: string) => {
-    setSelectedAccountId(accountId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, accountId);
+    selectAccount(accountId);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,25 +59,9 @@ export default function AccountsPage() {
     setSubmitting(true);
 
     try {
-      const newAccount = await apiFetch<Account>('/accounts', {
-        method: 'POST',
-        body: JSON.stringify({
-          uid: uid.trim(),
-          server,
-          nickname: nickname.trim() || null,
-        }),
-      });
-
-      // 选中新账号
-      setSelectedAccountId(newAccount.id);
-      localStorage.setItem(SELECTED_ACCOUNT_KEY, newAccount.id);
-
-      // 清空表单
+      await addAccount(uid.trim(), server, nickname.trim() || undefined);
       setUid('');
       setNickname('');
-
-      // 刷新列表
-      await fetchAccounts();
     } catch (err) {
       setFormError(err instanceof Error ? err.message : '添加账号失败');
     } finally {
@@ -121,21 +80,7 @@ export default function AccountsPage() {
     setError(null);
 
     try {
-      await apiFetch(`/accounts/${accountId}`, { method: 'DELETE' });
-
-      // 刷新列表
-      const updatedAccounts = await fetchAccounts();
-
-      // 处理选中状态
-      if (selectedAccountId === accountId) {
-        if (updatedAccounts.length > 0) {
-          setSelectedAccountId(updatedAccounts[0].id);
-          localStorage.setItem(SELECTED_ACCOUNT_KEY, updatedAccounts[0].id);
-        } else {
-          setSelectedAccountId(null);
-          localStorage.removeItem(SELECTED_ACCOUNT_KEY);
-        }
-      }
+      await deleteAccount(accountId);
     } catch (err) {
       setError(err instanceof Error ? err.message : '删除账号失败');
     } finally {
@@ -143,7 +88,8 @@ export default function AccountsPage() {
     }
   };
 
-  if (!mounted) {
+  // Show nothing while checking auth
+  if (isLoading) {
     return null;
   }
 
@@ -160,7 +106,7 @@ export default function AccountsPage() {
           </Link>
         </div>
 
-        {/* 新增账号表单 */}
+        {/* Add account form */}
         <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
           <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">新增账号</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -219,16 +165,16 @@ export default function AccountsPage() {
           </form>
         </div>
 
-        {/* 账号列表 */}
+        {/* Account list */}
         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">我的账号</h2>
 
-        {loading && (
+        {accountsLoading && (
           <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
         {error && <div className="py-4 text-center text-red-500">{error}</div>}
 
-        {!loading && (
+        {!accountsLoading && (
           <>
             {accounts.length === 0 ? (
               <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">

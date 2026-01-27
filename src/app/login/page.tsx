@@ -1,16 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { setTokens } from '@/lib/authToken';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-
-interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-}
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,19 +18,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || '登录失败');
-      }
-
-      const data: LoginResponse = await response.json();
-      setTokens(data.accessToken, data.refreshToken);
+      await login(email, password);
       window.location.href = '/app/achievements';
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败');
@@ -83,6 +67,13 @@ export default function LoginPage() {
             {loading ? '登录中...' : '登录'}
           </button>
         </form>
+
+        <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
+          还没有账号？
+          <Link href="/register" className="ml-1 text-blue-600 hover:underline">
+            去注册
+          </Link>
+        </p>
       </div>
     </div>
   );

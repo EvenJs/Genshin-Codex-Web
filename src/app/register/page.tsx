@@ -2,16 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { setTokens } from '@/lib/authToken';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
-
-interface AuthResponse {
-  accessToken?: string;
-  refreshToken?: string;
-}
+import { useAuth } from '@/hooks/useAuth';
 
 export default function RegisterPage() {
+  const { register } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +17,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // 前端校验
+    // Frontend validation
     if (password !== confirmPassword) {
       setError('两次输入的密码不一致');
       return;
@@ -36,47 +31,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 注册请求
-      const registerRes = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!registerRes.ok) {
-        const text = await registerRes.text();
-        throw new Error(text || '注册失败');
-      }
-
-      const registerData: AuthResponse = await registerRes.json();
-
-      // 如果返回 token，直接使用
-      if (registerData.accessToken && registerData.refreshToken) {
-        setTokens(registerData.accessToken, registerData.refreshToken);
-        window.location.href = '/app/achievements';
-        return;
-      }
-
-      // 否则自动登录获取 token
-      const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!loginRes.ok) {
-        const text = await loginRes.text();
-        throw new Error(text || '自动登录失败，请手动登录');
-      }
-
-      const loginData: AuthResponse = await loginRes.json();
-
-      if (loginData.accessToken && loginData.refreshToken) {
-        setTokens(loginData.accessToken, loginData.refreshToken);
-        window.location.href = '/app/achievements';
-      } else {
-        throw new Error('登录响应异常，请手动登录');
-      }
+      await register(email, password);
+      window.location.href = '/app/achievements';
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败');
     } finally {
