@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { getToken } from '@/lib/authToken';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useUserAchievements } from '@/hooks/useAchievements';
+import { useMounted } from '@/hooks/useMounted';
+import { Button } from '@/components/ui/button';
+import { Star, ChevronLeft, ChevronRight, Search, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Account } from '@/types/account';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
@@ -11,7 +15,7 @@ const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 type StatusFilter = 'all' | 'incomplete' | 'completed';
 
 export default function MyAchievementsPage() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -20,7 +24,6 @@ export default function MyAchievementsPage() {
 
   const pageSize = 20;
 
-  // Use SWR hooks
   const { accounts, isLoading: accountsLoading } = useAccounts();
   const {
     items: achievements,
@@ -35,24 +38,24 @@ export default function MyAchievementsPage() {
     q: debouncedQ || undefined,
   });
 
-  // Mount and auth check
+  // Auth check on mount
   useEffect(() => {
-    setMounted(true);
+    if (!mounted) return;
     const token = getToken();
     if (!token) {
       window.location.href = '/login';
     }
-  }, []);
+  }, [mounted]);
 
   // Initialize selected account from localStorage
   useEffect(() => {
-    if (!mounted || accounts.length === 0) return;
+    if (!mounted || accounts.length === 0 || selectedAccountId) return;
 
     const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
     const validId = accounts.find((a) => a.id === savedId)?.id ?? accounts[0].id;
     setSelectedAccountId(validId);
     localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
-  }, [mounted, accounts]);
+  }, [mounted, accounts, selectedAccountId]);
 
   // Debounce search query
   useEffect(() => {
@@ -79,13 +82,10 @@ export default function MyAchievementsPage() {
     await toggleCompletion(achievementId, completed);
   };
 
-  // Filter achievements by status (client-side)
   const filteredAchievements =
     status === 'all'
       ? achievements
-      : achievements.filter((a) =>
-          status === 'completed' ? a.completed : !a.completed
-        );
+      : achievements.filter((a) => (status === 'completed' ? a.completed : !a.completed));
 
   const totalPages = Math.ceil(total / pageSize);
   const isLoading = accountsLoading || achievementsLoading;
@@ -94,28 +94,27 @@ export default function MyAchievementsPage() {
     return account.nickname || `${account.uid} (${account.server})`;
   };
 
-  // Prevent hydration mismatch
   if (!mounted) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="mx-auto max-w-5xl px-4 py-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">我的成就</h1>
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Achievements</h1>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
         {/* Account selector */}
         {accounts.length > 0 && (
-          <div className="mb-6 flex items-center gap-2">
-            <label className="text-sm text-zinc-600 dark:text-zinc-400">账号:</label>
+          <div className="mb-4 flex items-center gap-2">
+            <label className="text-sm text-muted-foreground">Account:</label>
             <select
               value={selectedAccountId ?? ''}
               onChange={(e) => handleAccountChange(e.target.value)}
-              className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="flex-1 sm:flex-none rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {accounts.map((account) => (
                 <option key={account.id} value={account.id}>
@@ -128,114 +127,130 @@ export default function MyAchievementsPage() {
 
         {/* Stats */}
         {stats && (
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-            <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                {stats.completedCount}
-              </div>
-              <div className="text-sm text-zinc-500">已完成</div>
-            </div>
-            <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                {stats.incompleteCount}
-              </div>
-              <div className="text-sm text-zinc-500">未完成</div>
-            </div>
-            <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                {stats.totalCount}
-              </div>
-              <div className="text-sm text-zinc-500">总数</div>
-            </div>
-            <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-amber-500">{stats.primogemsEarned}</div>
-              <div className="text-sm text-zinc-500">已获原石</div>
-            </div>
-            <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-              <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-                {stats.primogemsTotal}
-              </div>
-              <div className="text-sm text-zinc-500">总原石</div>
-            </div>
+          <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-5">
+            <StatCard
+              value={stats.completedCount}
+              label="Completed"
+              variant="success"
+            />
+            <StatCard
+              value={stats.incompleteCount}
+              label="Incomplete"
+              variant="default"
+            />
+            <StatCard
+              value={stats.totalCount}
+              label="Total"
+              variant="default"
+              className="hidden sm:block"
+            />
+            <StatCard
+              value={stats.primogemsEarned}
+              label="Earned"
+              variant="gold"
+              icon={<Star className="h-4 w-4 fill-current" />}
+            />
+            <StatCard
+              value={stats.primogemsTotal}
+              label="Total"
+              variant="gold"
+              icon={<Star className="h-4 w-4 fill-current opacity-50" />}
+              className="hidden sm:block"
+            />
           </div>
         )}
 
         {/* Tabs */}
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex gap-1 sm:gap-2">
           {(['all', 'incomplete', 'completed'] as StatusFilter[]).map((s) => (
-            <button
+            <Button
               key={s}
+              variant={status === s ? 'default' : 'secondary'}
+              size="sm"
               onClick={() => handleStatusChange(s)}
-              className={`rounded px-4 py-2 text-sm font-medium transition-colors ${
-                status === s
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-zinc-200 text-zinc-700 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300'
-              }`}
+              className={cn(
+                'flex-1 sm:flex-none',
+                status === s && 'bg-primary text-primary-foreground'
+              )}
             >
-              {s === 'all' ? '全部' : s === 'incomplete' ? '未完成' : '已完成'}
-            </button>
+              {s === 'all' ? 'All' : s === 'incomplete' ? 'Incomplete' : 'Completed'}
+            </Button>
           ))}
         </div>
 
         {/* Search */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="搜索成就..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
-          />
+        <div className="mb-4 sm:mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search achievements..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full rounded-lg border border-input bg-card pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
         </div>
 
         {/* List */}
         {isLoading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
+          <div className="py-12 text-center text-muted-foreground">Loading...</div>
         )}
 
-        {error && <div className="py-12 text-center text-red-500">{error.message}</div>}
+        {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
 
         {!isLoading && !error && (
           <>
-            <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">共 {total} 个成就</div>
+            <div className="mb-4 text-sm text-muted-foreground">{total} achievements</div>
 
             {filteredAchievements.length === 0 ? (
-              <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">没有找到成就</div>
+              <div className="py-12 text-center text-muted-foreground">No achievements found</div>
             ) : (
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {filteredAchievements.map((item) => (
                   <li
                     key={item.id}
-                    className="flex items-start gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800"
+                    className={cn(
+                      'flex items-start gap-3 sm:gap-4 rounded-lg border border-border bg-card p-3 sm:p-4 transition-colors',
+                      item.completed && 'bg-accent/5'
+                    )}
                   >
-                    <input
-                      type="checkbox"
-                      checked={item.completed}
-                      onChange={(e) => handleToggleCompleted(item.id, e.target.checked)}
-                      className="mt-1 h-5 w-5 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                    />
+                    <button
+                      onClick={() => handleToggleCompleted(item.id, !item.completed)}
+                      className={cn(
+                        'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
+                        item.completed
+                          ? 'border-primary bg-primary text-primary-foreground'
+                          : 'border-muted-foreground/30 hover:border-primary'
+                      )}
+                    >
+                      {item.completed && <Check className="h-3 w-3" />}
+                    </button>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3
-                          className={`font-medium ${item.completed ? 'text-zinc-400 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}
+                          className={cn(
+                            'font-medium text-sm sm:text-base',
+                            item.completed
+                              ? 'text-muted-foreground line-through'
+                              : 'text-foreground'
+                          )}
                         >
                           {item.name}
                         </h3>
                         {item.completed && (
-                          <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">
-                            已完成
+                          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary font-medium">
+                            Done
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
                         {item.description}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 text-amber-500 font-medium shrink-0">
-                      <span>{item.rewardPrimogems}</span>
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" />
-                      </svg>
+                    <div className="flex items-center gap-1 text-genshin-gold font-semibold shrink-0">
+                      <span className="text-sm">{item.rewardPrimogems}</span>
+                      <Star className="h-4 w-4 fill-current" />
                     </div>
                   </li>
                 ))}
@@ -245,28 +260,64 @@ export default function MyAchievementsPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-center gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="rounded border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300"
                 >
-                  上一页
-                </button>
-                <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Previous</span>
+                </Button>
+                <span className="text-sm text-muted-foreground px-2">
                   {page} / {totalPages}
                 </span>
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="rounded border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300"
                 >
-                  下一页
-                </button>
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
             )}
           </>
         )}
       </main>
+    </div>
+  );
+}
+
+interface StatCardProps {
+  value: number;
+  label: string;
+  variant?: 'default' | 'success' | 'gold';
+  icon?: React.ReactNode;
+  className?: string;
+}
+
+function StatCard({ value, label, variant = 'default', icon, className }: StatCardProps) {
+  return (
+    <div
+      className={cn(
+        'rounded-lg border border-border bg-card p-3 sm:p-4',
+        className
+      )}
+    >
+      <div
+        className={cn(
+          'text-xl sm:text-2xl font-bold flex items-center gap-1',
+          variant === 'gold' && 'text-genshin-gold',
+          variant === 'success' && 'text-accent',
+          variant === 'default' && 'text-foreground'
+        )}
+      >
+        {value}
+        {icon}
+      </div>
+      <div className="text-xs sm:text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }

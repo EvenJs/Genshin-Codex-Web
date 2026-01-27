@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { AccountDropdown } from './AccountDropdown';
 import { NavLinks } from './NavLinks';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Header() {
   const {
@@ -27,30 +28,25 @@ export function Header() {
   // Don't render until auth state is loaded
   if (isLoading) {
     return (
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xl font-bold text-zinc-900 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400"
-          >
+          <Link href="/" className="text-xl font-bold text-primary hover:text-primary/80">
             Genshin Codex
           </Link>
+          <ThemeToggle />
         </div>
       </header>
     );
   }
 
   return (
-    <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
+    <header className="border-b border-border bg-card">
       <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-xl font-bold text-zinc-900 dark:text-zinc-100 hover:text-blue-600 dark:hover:text-blue-400"
-        >
+        <Link href="/" className="text-xl font-bold text-primary hover:text-primary/80">
           Genshin Codex
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 sm:gap-4">
           {isLoggedIn && (
             <AccountDropdown
               accounts={accounts}
@@ -63,6 +59,7 @@ export function Header() {
             />
           )}
           <NavLinks isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+          <ThemeToggle />
         </nav>
       </div>
     </header>

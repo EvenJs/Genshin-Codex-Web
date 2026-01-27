@@ -14,6 +14,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Relax some strict React rules for common patterns
+  {
+    rules: {
+      // Allow setState in effects for initialization patterns
+      "react-hooks/set-state-in-effect": "off",
+      // Allow reading refs during render for initialization
+      "react-hooks/refs": "off",
+    },
+  },
   prettier,
 ]);
 

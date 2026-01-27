@@ -1,26 +1,183 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  /* Genshin custom colors */
+  --color-genshin-gold: var(--genshin-gold);
+  --color-genshin-gold-light: var(--genshin-gold-light);
+  --color-genshin-celestia: var(--genshin-celestia);
+  --color-genshin-mora: var(--genshin-mora);
+  --color-genshin-primogem: var(--genshin-primogem);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Genshin Impact Theme - Light Mode */
+:root {
+  --radius: 0.625rem;
+  /* Warm parchment background (like in-game UI) */
+  --background: oklch(0.965 0.008 85);
+  --foreground: oklch(0.25 0.02 260);
+  /* Cream white cards */
+  --card: oklch(0.985 0.005 85);
+  --card-foreground: oklch(0.25 0.02 260);
+  --popover: oklch(0.99 0.003 85);
+  --popover-foreground: oklch(0.25 0.02 260);
+  /* Gold primary (Mora/Primogem inspired) */
+  --primary: oklch(0.63 0.145 75);
+  --primary-foreground: oklch(0.98 0.005 85);
+  /* Soft blue-gray secondary (map UI) */
+  --secondary: oklch(0.92 0.015 250);
+  --secondary-foreground: oklch(0.25 0.03 260);
+  --muted: oklch(0.94 0.01 85);
+  --muted-foreground: oklch(0.5 0.02 260);
+  /* Teal accent (Celestia/Star inspired) */
+  --accent: oklch(0.73 0.12 175);
+  --accent-foreground: oklch(0.15 0.02 175);
+  /* Red destructive (HP bar) */
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.88 0.02 75);
+  --input: oklch(0.92 0.015 75);
+  --ring: oklch(0.63 0.145 75);
+  /* Chart colors (elemental inspired) */
+  --chart-1: oklch(0.63 0.145 75);  /* Geo gold */
+  --chart-2: oklch(0.73 0.12 175);  /* Dendro/Anemo teal */
+  --chart-3: oklch(0.55 0.18 260);  /* Electro purple */
+  --chart-4: oklch(0.65 0.2 25);    /* Pyro red */
+  --chart-5: oklch(0.6 0.18 220);   /* Hydro blue */
+  /* Sidebar */
+  --sidebar: oklch(0.96 0.01 85);
+  --sidebar-foreground: oklch(0.25 0.02 260);
+  --sidebar-primary: oklch(0.63 0.145 75);
+  --sidebar-primary-foreground: oklch(0.98 0.005 85);
+  --sidebar-accent: oklch(0.73 0.12 175);
+  --sidebar-accent-foreground: oklch(0.15 0.02 175);
+  --sidebar-border: oklch(0.88 0.02 75);
+  --sidebar-ring: oklch(0.63 0.145 75);
+  /* Genshin specific colors */
+  --genshin-gold: oklch(0.75 0.16 75);
+  --genshin-gold-light: oklch(0.85 0.12 80);
+  --genshin-celestia: oklch(0.73 0.12 175);
+  --genshin-mora: oklch(0.68 0.15 70);
+  --genshin-primogem: oklch(0.6 0.2 290);
+}
+
+/* Genshin Impact Theme - Dark Mode (Night Sky) */
+.dark {
+  /* Deep navy blue (Teyvat night sky) */
+  --background: oklch(0.18 0.035 255);
+  --foreground: oklch(0.95 0.01 85);
+  /* Dark blue-gray cards */
+  --card: oklch(0.22 0.04 255);
+  --card-foreground: oklch(0.95 0.01 85);
+  --popover: oklch(0.25 0.04 255);
+  --popover-foreground: oklch(0.95 0.01 85);
+  /* Bright gold primary */
+  --primary: oklch(0.78 0.16 75);
+  --primary-foreground: oklch(0.18 0.035 255);
+  /* Dark secondary */
+  --secondary: oklch(0.28 0.04 255);
+  --secondary-foreground: oklch(0.95 0.01 85);
+  --muted: oklch(0.28 0.035 255);
+  --muted-foreground: oklch(0.65 0.02 260);
+  /* Bright teal accent (stars/constellations) */
+  --accent: oklch(0.78 0.14 175);
+  --accent-foreground: oklch(0.18 0.035 255);
+  /* Red destructive */
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.32 0.04 255);
+  --input: oklch(0.28 0.04 255);
+  --ring: oklch(0.78 0.16 75);
+  /* Chart colors (elemental - brighter for dark mode) */
+  --chart-1: oklch(0.78 0.16 75);   /* Geo gold */
+  --chart-2: oklch(0.78 0.14 175);  /* Dendro/Anemo teal */
+  --chart-3: oklch(0.65 0.2 280);   /* Electro purple */
+  --chart-4: oklch(0.7 0.22 25);    /* Pyro red */
+  --chart-5: oklch(0.7 0.2 220);    /* Hydro blue */
+  /* Sidebar */
+  --sidebar: oklch(0.15 0.03 255);
+  --sidebar-foreground: oklch(0.95 0.01 85);
+  --sidebar-primary: oklch(0.78 0.16 75);
+  --sidebar-primary-foreground: oklch(0.18 0.035 255);
+  --sidebar-accent: oklch(0.78 0.14 175);
+  --sidebar-accent-foreground: oklch(0.18 0.035 255);
+  --sidebar-border: oklch(0.32 0.04 255);
+  --sidebar-ring: oklch(0.78 0.16 75);
+  /* Genshin specific colors */
+  --genshin-gold: oklch(0.82 0.18 75);
+  --genshin-gold-light: oklch(0.88 0.14 80);
+  --genshin-celestia: oklch(0.8 0.15 175);
+  --genshin-mora: oklch(0.75 0.17 70);
+  --genshin-primogem: oklch(0.7 0.22 290);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom scrollbar for Genshin feel */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-muted rounded-full;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/40 rounded-full hover:bg-primary/60;
+  }
+}
+
+/* iOS safe area padding for bottom nav */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
