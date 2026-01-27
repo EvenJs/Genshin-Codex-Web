@@ -142,3 +142,29 @@ export const SUB_STATS = [
   'Crit Rate%',
   'Crit DMG%',
 ];
+
+// OCR Result types
+export interface OcrSubStatResult {
+  stat: string;
+  value: number;
+  confidence: number;
+}
+
+export interface OcrArtifactResult {
+  setId?: string;
+  setName?: string;
+  slot?: ArtifactSlot;
+  mainStat: string;
+  mainStatValue: number;
+  subStats: OcrSubStatResult[];
+  level: number;
+  rarity: number;
+  overallConfidence: number;
+  rawText: string;
+}
+
+export interface OcrUploadResponse {
+  result: OcrArtifactResult;
+  success: boolean;
+  warnings?: string[];
+}

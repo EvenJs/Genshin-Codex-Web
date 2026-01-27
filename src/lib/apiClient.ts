@@ -110,3 +110,57 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 
   return response.json();
 }
+
+/**
+ * Upload a file to the API (uses FormData, does not set Content-Type header)
+ */
+export async function apiUpload<T>(path: string, file: File, fieldName = 'file'): Promise<T> {
+  const formData = new FormData();
+  formData.append(fieldName, file);
+
+  const executeRequest = async (token: string | null) => {
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+  };
+
+  let response = await executeRequest(getToken());
+
+  // If 401, try to refresh token
+  if (response.status === 401 && !path.includes('/auth/refresh')) {
+    const refreshed = await tryRefresh();
+
+    if (refreshed) {
+      response = await executeRequest(getToken());
+    } else {
+      clearAllTokens();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      throw new ApiError(401, 'Session expired');
+    }
+  }
+
+  if (response.status === 401) {
+    clearAllTokens();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new ApiError(401, 'Unauthorized');
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new ApiError(response.status, errorText || response.statusText);
+  }
+
+  return response.json();
+}

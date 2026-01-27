@@ -16,11 +16,15 @@ import {
 import { ArtifactList } from '@/components/artifacts/ArtifactList';
 import { ArtifactForm } from '@/components/artifacts/ArtifactForm';
 import { ArtifactFilterPanel } from '@/components/artifacts/ArtifactFilterPanel';
-import { ChevronLeft, ChevronRight, Plus, Package } from 'lucide-react';
+import { ArtifactOcrUpload } from '@/components/artifacts/ArtifactOcrUpload';
+import { OcrPreview } from '@/components/artifacts/OcrPreview';
+import { ChevronLeft, ChevronRight, Plus, Package, Camera, PenLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Account } from '@/types/account';
-import type { ArtifactSlot, UserArtifact, CreateArtifactDto } from '@/types/artifact';
+import type { ArtifactSlot, UserArtifact, CreateArtifactDto, OcrUploadResponse } from '@/types/artifact';
 import { SLOT_NAMES_SHORT } from '@/types/artifact';
+
+type InputMode = 'manual' | 'ocr' | 'ocr-preview';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 
@@ -30,6 +34,8 @@ export default function ArtifactsPage() {
   const [page, setPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inputMode, setInputMode] = useState<InputMode>('manual');
+  const [ocrResult, setOcrResult] = useState<OcrUploadResponse | null>(null);
 
   // Filters
   const [selectedSetId, setSelectedSetId] = useState('');
@@ -268,21 +274,96 @@ export default function ArtifactsPage() {
       </main>
 
       {/* Add Artifact Sheet */}
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+      <Sheet
+        open={isFormOpen}
+        onOpenChange={(open) => {
+          setIsFormOpen(open);
+          if (!open) {
+            setInputMode('manual');
+            setOcrResult(null);
+          }
+        }}
+      >
         <SheetContent side="right" className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Add Artifact</SheetTitle>
             <SheetDescription>
-              Manually enter your artifact details.
+              {inputMode === 'manual'
+                ? 'Manually enter your artifact details.'
+                : inputMode === 'ocr'
+                  ? 'Upload a screenshot to scan artifact stats.'
+                  : 'Review and confirm the scanned artifact data.'}
             </SheetDescription>
           </SheetHeader>
+
+          {/* Mode selector tabs */}
+          {inputMode !== 'ocr-preview' && (
+            <div className="flex gap-1 border-b border-border px-4 pt-2">
+              <button
+                onClick={() => setInputMode('manual')}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
+                  inputMode === 'manual'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <PenLine className="h-4 w-4" />
+                Manual
+              </button>
+              <button
+                onClick={() => setInputMode('ocr')}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors',
+                  inputMode === 'ocr'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                <Camera className="h-4 w-4" />
+                Scan
+              </button>
+            </div>
+          )}
+
           <div className="p-4">
-            <ArtifactForm
-              artifactSets={artifactSets}
-              onSubmit={handleCreateArtifact}
-              onCancel={() => setIsFormOpen(false)}
-              isSubmitting={isSubmitting}
-            />
+            {inputMode === 'manual' && (
+              <ArtifactForm
+                artifactSets={artifactSets}
+                onSubmit={handleCreateArtifact}
+                onCancel={() => setIsFormOpen(false)}
+                isSubmitting={isSubmitting}
+              />
+            )}
+
+            {inputMode === 'ocr' && selectedAccountId && (
+              <ArtifactOcrUpload
+                accountId={selectedAccountId}
+                onOcrResult={(result) => {
+                  setOcrResult(result);
+                  setInputMode('ocr-preview');
+                }}
+                onCancel={() => setIsFormOpen(false)}
+              />
+            )}
+
+            {inputMode === 'ocr-preview' && ocrResult && (
+              <OcrPreview
+                ocrResult={ocrResult}
+                artifactSets={artifactSets}
+                onConfirm={async (data) => {
+                  await handleCreateArtifact(data);
+                  setOcrResult(null);
+                  setInputMode('manual');
+                }}
+                onCancel={() => setIsFormOpen(false)}
+                onRetry={() => {
+                  setOcrResult(null);
+                  setInputMode('ocr');
+                }}
+                isSubmitting={isSubmitting}
+              />
+            )}
           </div>
         </SheetContent>
       </Sheet>
