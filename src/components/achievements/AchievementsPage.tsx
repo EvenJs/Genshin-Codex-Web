@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { usePublicAchievements } from '@/hooks/usePublicAchievements';
+import { usePublicAchievements } from '@/hooks/useAchievements';
 import { AchievementList } from '@/components/achievements/AchievementList';
 
 export function AchievementsPage() {
@@ -14,7 +14,7 @@ export function AchievementsPage() {
   // Fetch unfiltered data for filter options
   const { items: allItems } = usePublicAchievements({
     page: 1,
-    limit: 1000, // Fetch enough to get all categories/regions
+    pageSize: 1000, // Fetch enough to get all categories/regions
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function AchievementsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { items, total, pageSize, loading, error } = usePublicAchievements({
+  const { items, total, pageSize, isLoading, error } = usePublicAchievements({
     page,
     q: debouncedQ || undefined,
     category: category || undefined,
@@ -115,13 +115,13 @@ export function AchievementsPage() {
           </div>
         </div>
 
-        {loading && (
+        {isLoading && (
           <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
-        {error && <div className="py-12 text-center text-red-500">{error}</div>}
+        {error && <div className="py-12 text-center text-red-500">{error.message}</div>}
 
-        {!loading && !error && (
+        {!isLoading && !error && (
           <>
             <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">共 {total} 个成就</div>
 

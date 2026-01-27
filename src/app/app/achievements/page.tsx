@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { getToken } from '@/lib/authToken';
-import { apiFetch } from '@/lib/apiClient';
-import type { Account, UserAchievement, UserAchievementsResponse } from '@/types/account';
+import { useAccounts } from '@/hooks/useAccounts';
+import { useUserAchievements } from '@/hooks/useAchievements';
+import type { Account } from '@/types/account';
 
 const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 
@@ -11,20 +12,30 @@ type StatusFilter = 'all' | 'incomplete' | 'completed';
 
 export default function MyAchievementsPage() {
   const [mounted, setMounted] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
-  const [stats, setStats] = useState<UserAchievementsResponse['stats'] | null>(null);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [q, setQ] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [debouncedQ, setDebouncedQ] = useState('');
 
   const pageSize = 20;
 
-  // 挂载后检查 token
+  // Use SWR hooks
+  const { accounts, isLoading: accountsLoading } = useAccounts();
+  const {
+    items: achievements,
+    total,
+    stats,
+    isLoading: achievementsLoading,
+    error,
+    toggleCompletion,
+  } = useUserAchievements(selectedAccountId, {
+    page,
+    pageSize,
+    q: debouncedQ || undefined,
+  });
+
+  // Mount and auth check
   useEffect(() => {
     setMounted(true);
     const token = getToken();
@@ -33,61 +44,25 @@ export default function MyAchievementsPage() {
     }
   }, []);
 
-  // 拉取账号列表
+  // Initialize selected account from localStorage
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || accounts.length === 0) return;
 
-    async function fetchAccounts() {
-      try {
-        const data = await apiFetch<Account[]>('/accounts');
-        setAccounts(data);
+    const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
+    const validId = accounts.find((a) => a.id === savedId)?.id ?? accounts[0].id;
+    setSelectedAccountId(validId);
+    localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
+  }, [mounted, accounts]);
 
-        if (data.length > 0) {
-          const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-          const validId = data.find((a) => a.id === savedId)?.id ?? data[0].id;
-          setSelectedAccountId(validId);
-          localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '加载账号失败');
-      }
-    }
-
-    if (getToken()) {
-      fetchAccounts();
-    }
-  }, [mounted]);
-
-  // 拉取成就列表
-  const fetchAchievements = useCallback(async () => {
-    if (!selectedAccountId) return;
-
-    setLoading(true);
-    setError(null);
-
-    const params = new URLSearchParams();
-    params.set('status', status);
-    params.set('page', String(page));
-    params.set('pageSize', String(pageSize));
-    if (q) params.set('q', q);
-
-    try {
-      const data = await apiFetch<UserAchievementsResponse>(
-        `/accounts/${selectedAccountId}/achievements?${params.toString()}`,
-      );
-      setAchievements(data.items);
-      setTotal(data.total);
-      setStats(data.stats);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载成就失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedAccountId, status, page, q]);
-
+  // Debounce search query
   useEffect(() => {
-    fetchAchievements();
-  }, [fetchAchievements]);
+    const timer = setTimeout(() => {
+      setDebouncedQ(q);
+      setPage(1);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [q]);
 
   const handleAccountChange = (accountId: string) => {
     setSelectedAccountId(accountId);
@@ -100,34 +75,26 @@ export default function MyAchievementsPage() {
     setPage(1);
   };
 
-  const handleSearch = () => {
-    setPage(1);
-    fetchAchievements();
-  };
-
   const handleToggleCompleted = async (achievementId: string, completed: boolean) => {
-    if (!selectedAccountId) return;
-
-    setLoading(true);
-    try {
-      await apiFetch(`/accounts/${selectedAccountId}/progress/${achievementId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ completed }),
-      });
-      await fetchAchievements();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '更新失败');
-      setLoading(false);
-    }
+    await toggleCompletion(achievementId, completed);
   };
+
+  // Filter achievements by status (client-side)
+  const filteredAchievements =
+    status === 'all'
+      ? achievements
+      : achievements.filter((a) =>
+          status === 'completed' ? a.completed : !a.completed
+        );
 
   const totalPages = Math.ceil(total / pageSize);
+  const isLoading = accountsLoading || achievementsLoading;
 
   const getAccountDisplay = (account: Account) => {
     return account.nickname || `${account.uid} (${account.server})`;
   };
 
-  // 挂载前不渲染，避免 hydration 错误
+  // Prevent hydration mismatch
   if (!mounted) {
     return null;
   }
@@ -141,7 +108,7 @@ export default function MyAchievementsPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
-        {/* 账号选择 */}
+        {/* Account selector */}
         {accounts.length > 0 && (
           <div className="mb-6 flex items-center gap-2">
             <label className="text-sm text-zinc-600 dark:text-zinc-400">账号:</label>
@@ -159,7 +126,7 @@ export default function MyAchievementsPage() {
           </div>
         )}
 
-        {/* 统计信息 */}
+        {/* Stats */}
         {stats && (
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
             <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
@@ -210,40 +177,33 @@ export default function MyAchievementsPage() {
           ))}
         </div>
 
-        {/* 搜索框 */}
-        <div className="mb-6 flex gap-2">
+        {/* Search */}
+        <div className="mb-6">
           <input
             type="text"
             placeholder="搜索成就..."
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+            className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
-          <button
-            onClick={handleSearch}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700"
-          >
-            搜索
-          </button>
         </div>
 
-        {/* 列表 */}
-        {loading && (
+        {/* List */}
+        {isLoading && (
           <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
         )}
 
-        {error && <div className="py-12 text-center text-red-500">{error}</div>}
+        {error && <div className="py-12 text-center text-red-500">{error.message}</div>}
 
-        {!loading && !error && (
+        {!isLoading && !error && (
           <>
             <div className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">共 {total} 个成就</div>
 
-            {achievements.length === 0 ? (
+            {filteredAchievements.length === 0 ? (
               <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">没有找到成就</div>
             ) : (
               <ul className="space-y-3">
-                {achievements.map((item) => (
+                {filteredAchievements.map((item) => (
                   <li
                     key={item.id}
                     className="flex items-start gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800"
@@ -282,7 +242,7 @@ export default function MyAchievementsPage() {
               </ul>
             )}
 
-            {/* 分页 */}
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-center gap-2">
                 <button
