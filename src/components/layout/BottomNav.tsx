@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { Trophy, User, Home, LogIn, Gem, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ function NavItem({ href, icon, label, isActive }: NavItemProps) {
 export function BottomNav() {
   const pathname = usePathname();
   const { isLoggedIn, isLoading } = useAuth();
+  const t = useTranslations('nav');
 
   // Don't show bottom nav on auth pages
   if (pathname === '/login' || pathname === '/register') {
@@ -52,7 +54,7 @@ export function BottomNav() {
         <NavItem
           href="/achievements"
           icon={<Home className="h-5 w-5" />}
-          label="Browse"
+          label={t('browse')}
           isActive={isAchievementsActive && !isMyAchievementsActive}
         />
 
@@ -61,19 +63,19 @@ export function BottomNav() {
             <NavItem
               href="/app/achievements"
               icon={<Trophy className="h-5 w-5" />}
-              label="Progress"
+              label={t('progress')}
               isActive={isMyAchievementsActive}
             />
             <NavItem
               href="/app/artifacts"
               icon={<Gem className="h-5 w-5" />}
-              label="Artifacts"
+              label={t('artifacts')}
               isActive={isArtifactsActive}
             />
             <NavItem
               href="/app/characters"
               icon={<Users className="h-5 w-5" />}
-              label="Characters"
+              label={t('characters')}
               isActive={isCharactersActive}
             />
           </>
@@ -81,7 +83,7 @@ export function BottomNav() {
           <NavItem
             href="/login"
             icon={<LogIn className="h-5 w-5" />}
-            label="Login"
+            label={t('login')}
             isActive={false}
           />
         ) : null}

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 import { SWRProvider } from '@/components/providers/SWRProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -22,23 +24,28 @@ export const metadata: Metadata = {
   description: 'Track your Genshin Impact achievements and progress',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider>
-          <SWRProvider>
-            <AuthProvider>
-              <Header />
-              <main className="pb-16 md:pb-0">{children}</main>
-              <BottomNav />
-            </AuthProvider>
-          </SWRProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <ThemeProvider>
+            <SWRProvider>
+              <AuthProvider>
+                <Header />
+                <main className="pb-16 md:pb-0">{children}</main>
+                <BottomNav />
+              </AuthProvider>
+            </SWRProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

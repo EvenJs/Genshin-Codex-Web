@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AccountDropdown } from './AccountDropdown';
 import { NavLinks } from './NavLinks';
 import { ThemeToggle } from './ThemeToggle';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Header() {
   const {
@@ -33,7 +34,10 @@ export function Header() {
           <Link href="/" className="text-xl font-bold text-primary hover:text-primary/80">
             Genshin Codex
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
     );
@@ -59,6 +63,7 @@ export function Header() {
             />
           )}
           <NavLinks isLoggedIn={isLoggedIn} onLogout={handleLogout} />
+          <LanguageSwitcher />
           <ThemeToggle />
         </nav>
       </div>

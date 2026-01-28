@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface NavLinksProps {
   isLoggedIn: boolean;
@@ -8,6 +9,8 @@ interface NavLinksProps {
 }
 
 export function NavLinks({ isLoggedIn, onLogout }: NavLinksProps) {
+  const t = useTranslations('nav');
+
   if (isLoggedIn) {
     return (
       <>
@@ -15,25 +18,25 @@ export function NavLinks({ isLoggedIn, onLogout }: NavLinksProps) {
           href="/app/achievements"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
-          Achievements
+          {t('achievements')}
         </Link>
         <Link
           href="/app/artifacts"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
-          Artifacts
+          {t('artifacts')}
         </Link>
         <Link
           href="/app/characters"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
-          Characters
+          {t('characters')}
         </Link>
         <button
           onClick={onLogout}
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
-          Logout
+          {t('logout')}
         </button>
       </>
     );
@@ -45,13 +48,13 @@ export function NavLinks({ isLoggedIn, onLogout }: NavLinksProps) {
         href="/login"
         className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
-        Login
+        {t('login')}
       </Link>
       <Link
         href="/register"
         className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm text-white font-medium hover:bg-blue-700"
       >
-        Register
+        {t('register')}
       </Link>
     </>
   );
