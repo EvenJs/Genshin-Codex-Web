@@ -40,3 +40,29 @@ export function clearAllTokens(): void {
   clearToken();
   clearRefreshToken();
 }
+
+/**
+ * Decode JWT token payload without verification
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get current user ID from the stored access token
+ */
+export function getCurrentUserId(): string | null {
+  const token = getToken();
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  return (payload.sub as string) ?? null;
+}

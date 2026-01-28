@@ -81,4 +81,23 @@ export const cacheKeys = {
   accountCharacters: (accountId: string) => `/accounts/${accountId}/characters`,
   accountCharacter: (accountId: string, characterId: string) =>
     `/accounts/${accountId}/characters/${characterId}`,
+  // Builds
+  builds: (params?: URLSearchParams) => {
+    const base = '/builds';
+    return params ? `${base}?${params.toString()}` : base;
+  },
+  build: (id: string) => `/builds/${id}`,
+  myBuilds: (params?: URLSearchParams) => {
+    const base = '/users/me/builds';
+    return params ? `${base}?${params.toString()}` : base;
+  },
+  savedBuilds: (params?: URLSearchParams) => {
+    const base = '/users/me/saved-builds';
+    return params ? `${base}?${params.toString()}` : base;
+  },
+  // Recommendations
+  recommendations: (accountId: string, characterId: string, params?: URLSearchParams) => {
+    const base = `/accounts/${accountId}/characters/${characterId}/recommend`;
+    return params ? `${base}?${params.toString()}` : base;
+  },
 };
