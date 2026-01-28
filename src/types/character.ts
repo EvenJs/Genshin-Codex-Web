@@ -29,6 +29,17 @@ export interface AccountCharactersResponse {
   items: AccountCharacter[];
 }
 
+export interface CreateAccountCharacterDto {
+  characterId: string;
+  level: number;
+  constellation?: number;
+}
+
+export interface UpdateAccountCharacterDto {
+  level?: number;
+  constellation?: number;
+}
+
 // Element display names and colors
 export const ELEMENT_NAMES: Record<Element, string> = {
   PYRO: 'Pyro',

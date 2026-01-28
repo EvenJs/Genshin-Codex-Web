@@ -4,13 +4,21 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken } from '@/lib/authToken';
 import { useAuth } from '@/hooks/useAuth';
-import { useAccountCharacters } from '@/hooks/useCharacters';
+import { useCharacters, useAccountCharacters } from '@/hooks/useCharacters';
 import { useMounted } from '@/hooks/useMounted';
 import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { CharacterCard } from '@/components/characters/CharacterCard';
-import { Search, Users } from 'lucide-react';
+import { CharacterForm } from '@/components/characters/CharacterForm';
+import { Search, Users, Plus, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AccountCharacter, Element } from '@/types/character';
+import type { AccountCharacter, Element, CreateAccountCharacterDto, UpdateAccountCharacterDto } from '@/types/character';
 import { ELEMENT_NAMES } from '@/types/character';
 
 const ELEMENTS: Element[] = ['PYRO', 'HYDRO', 'ANEMO', 'ELECTRO', 'DENDRO', 'CRYO', 'GEO'];
@@ -21,8 +29,22 @@ export default function CharactersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedElement, setSelectedElement] = useState<Element | ''>('');
 
+  // Form states
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingCharacter, setEditingCharacter] = useState<AccountCharacter | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
   const { selectedAccountId, accountsLoading } = useAuth();
-  const { characters, isLoading: charactersLoading, error } = useAccountCharacters(selectedAccountId);
+  const { characters: allCharacters } = useCharacters();
+  const {
+    characters,
+    isLoading: charactersLoading,
+    error,
+    createCharacter,
+    updateCharacter,
+    deleteCharacter,
+  } = useAccountCharacters(selectedAccountId);
 
   // Auth check on mount
   useEffect(() => {
@@ -35,6 +57,48 @@ export default function CharactersPage() {
 
   const handleCharacterClick = (character: AccountCharacter) => {
     router.push(`/app/characters/${character.id}`);
+  };
+
+  const handleEdit = (character: AccountCharacter, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingCharacter(character);
+    setIsFormOpen(true);
+  };
+
+  const handleDelete = async (characterId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (deleteConfirm === characterId) {
+      try {
+        await deleteCharacter(characterId);
+        setDeleteConfirm(null);
+      } catch (err) {
+        console.error('Failed to delete character:', err);
+      }
+    } else {
+      setDeleteConfirm(characterId);
+      // Auto-cancel after 3 seconds
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const handleFormSubmit = async (data: CreateAccountCharacterDto | UpdateAccountCharacterDto) => {
+    setIsSubmitting(true);
+    try {
+      if (editingCharacter) {
+        await updateCharacter(editingCharacter.id, data as UpdateAccountCharacterDto);
+      } else {
+        await createCharacter(data as CreateAccountCharacterDto);
+      }
+      setIsFormOpen(false);
+      setEditingCharacter(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setEditingCharacter(null);
   };
 
   // Filter characters
@@ -50,6 +114,9 @@ export default function CharactersPage() {
   const fiveStars = filteredCharacters.filter((c) => c.character.rarity === 5);
   const fourStars = filteredCharacters.filter((c) => c.character.rarity === 4);
 
+  // Existing character IDs for form filtering
+  const existingCharacterIds = characters.map((c) => c.character.id);
+
   const isLoading = accountsLoading || charactersLoading;
 
   if (!mounted) {
@@ -60,7 +127,13 @@ export default function CharactersPage() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Characters</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Characters</h1>
+            <Button onClick={() => setIsFormOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -132,8 +205,18 @@ export default function CharactersPage() {
             </div>
 
             {filteredCharacters.length === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">
-                No characters found
+              <div className="py-12 text-center">
+                <p className="text-muted-foreground mb-4">
+                  {characters.length === 0
+                    ? 'No characters yet. Add your first character!'
+                    : 'No characters found'}
+                </p>
+                {characters.length === 0 && (
+                  <Button onClick={() => setIsFormOpen(true)}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Character
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-6">
@@ -145,11 +228,34 @@ export default function CharactersPage() {
                     </h2>
                     <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {fiveStars.map((char) => (
-                        <CharacterCard
-                          key={char.id}
-                          character={char}
-                          onClick={handleCharacterClick}
-                        />
+                        <div key={char.id} className="group relative">
+                          <CharacterCard
+                            character={char}
+                            onClick={handleCharacterClick}
+                          />
+                          {/* Action buttons */}
+                          <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => handleEdit(char, e)}
+                              className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDelete(char.id, e)}
+                              className={cn(
+                                'rounded-lg p-1.5 shadow-sm transition-colors',
+                                deleteConfirm === char.id
+                                  ? 'bg-destructive text-destructive-foreground'
+                                  : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
+                              )}
+                              title={deleteConfirm === char.id ? 'Click again to confirm' : 'Delete'}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </section>
@@ -163,11 +269,34 @@ export default function CharactersPage() {
                     </h2>
                     <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {fourStars.map((char) => (
-                        <CharacterCard
-                          key={char.id}
-                          character={char}
-                          onClick={handleCharacterClick}
-                        />
+                        <div key={char.id} className="group relative">
+                          <CharacterCard
+                            character={char}
+                            onClick={handleCharacterClick}
+                          />
+                          {/* Action buttons */}
+                          <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => handleEdit(char, e)}
+                              className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDelete(char.id, e)}
+                              className={cn(
+                                'rounded-lg p-1.5 shadow-sm transition-colors',
+                                deleteConfirm === char.id
+                                  ? 'bg-destructive text-destructive-foreground'
+                                  : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
+                              )}
+                              title={deleteConfirm === char.id ? 'Click again to confirm' : 'Delete'}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </section>
@@ -177,6 +306,30 @@ export default function CharactersPage() {
           </>
         )}
       </main>
+
+      {/* Add/Edit Character Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={handleFormClose}>
+        <SheetContent side="right" className="overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{editingCharacter ? 'Edit Character' : 'Add Character'}</SheetTitle>
+            <SheetDescription>
+              {editingCharacter
+                ? 'Update character level and constellation.'
+                : 'Select a character and set their level and constellation.'}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="p-4">
+            <CharacterForm
+              allCharacters={allCharacters}
+              existingCharacterIds={existingCharacterIds}
+              initialData={editingCharacter ?? undefined}
+              onSubmit={handleFormSubmit}
+              onCancel={handleFormClose}
+              isSubmitting={isSubmitting}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
