@@ -2,21 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { getToken } from '@/lib/authToken';
-import { useAccounts } from '@/hooks/useAccounts';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserAchievements } from '@/hooks/useAchievements';
 import { useMounted } from '@/hooks/useMounted';
 import { Button } from '@/components/ui/button';
 import { Star, ChevronLeft, ChevronRight, Search, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Account } from '@/types/account';
-
-const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 
 type StatusFilter = 'all' | 'incomplete' | 'completed';
 
 export default function MyAchievementsPage() {
   const mounted = useMounted();
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<StatusFilter>('all');
   const [q, setQ] = useState('');
@@ -24,7 +20,7 @@ export default function MyAchievementsPage() {
 
   const pageSize = 20;
 
-  const { accounts, isLoading: accountsLoading } = useAccounts();
+  const { selectedAccountId, accountsLoading } = useAuth();
   const {
     items: achievements,
     total,
@@ -47,16 +43,6 @@ export default function MyAchievementsPage() {
     }
   }, [mounted]);
 
-  // Initialize selected account from localStorage
-  useEffect(() => {
-    if (!mounted || accounts.length === 0 || selectedAccountId) return;
-
-    const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-    const validId = accounts.find((a) => a.id === savedId)?.id ?? accounts[0].id;
-    setSelectedAccountId(validId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
-  }, [mounted, accounts, selectedAccountId]);
-
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -66,12 +52,6 @@ export default function MyAchievementsPage() {
 
     return () => clearTimeout(timer);
   }, [q]);
-
-  const handleAccountChange = (accountId: string) => {
-    setSelectedAccountId(accountId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, accountId);
-    setPage(1);
-  };
 
   const handleStatusChange = (newStatus: StatusFilter) => {
     setStatus(newStatus);
@@ -90,10 +70,6 @@ export default function MyAchievementsPage() {
   const totalPages = Math.ceil(total / pageSize);
   const isLoading = accountsLoading || achievementsLoading;
 
-  const getAccountDisplay = (account: Account) => {
-    return account.nickname || `${account.uid} (${account.server})`;
-  };
-
   if (!mounted) {
     return null;
   }
@@ -107,24 +83,6 @@ export default function MyAchievementsPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
-        {/* Account selector */}
-        {accounts.length > 0 && (
-          <div className="mb-4 flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Account:</label>
-            <select
-              value={selectedAccountId ?? ''}
-              onChange={(e) => handleAccountChange(e.target.value)}
-              className="flex-1 sm:flex-none rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {getAccountDisplay(account)}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {/* Stats */}
         {stats && (
           <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-5">

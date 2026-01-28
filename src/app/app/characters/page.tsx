@@ -3,29 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getToken } from '@/lib/authToken';
-import { useAccounts } from '@/hooks/useAccounts';
+import { useAuth } from '@/hooks/useAuth';
 import { useAccountCharacters } from '@/hooks/useCharacters';
 import { useMounted } from '@/hooks/useMounted';
 import { Button } from '@/components/ui/button';
 import { CharacterCard } from '@/components/characters/CharacterCard';
 import { Search, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Account } from '@/types/account';
 import type { AccountCharacter, Element } from '@/types/character';
 import { ELEMENT_NAMES } from '@/types/character';
-
-const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 
 const ELEMENTS: Element[] = ['PYRO', 'HYDRO', 'ANEMO', 'ELECTRO', 'DENDRO', 'CRYO', 'GEO'];
 
 export default function CharactersPage() {
   const router = useRouter();
   const mounted = useMounted();
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedElement, setSelectedElement] = useState<Element | ''>('');
 
-  const { accounts, isLoading: accountsLoading } = useAccounts();
+  const { selectedAccountId, accountsLoading } = useAuth();
   const { characters, isLoading: charactersLoading, error } = useAccountCharacters(selectedAccountId);
 
   // Auth check on mount
@@ -36,21 +32,6 @@ export default function CharactersPage() {
       window.location.href = '/login';
     }
   }, [mounted]);
-
-  // Initialize selected account from localStorage
-  useEffect(() => {
-    if (!mounted || accounts.length === 0 || selectedAccountId) return;
-
-    const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-    const validId = accounts.find((a) => a.id === savedId)?.id ?? accounts[0].id;
-    setSelectedAccountId(validId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
-  }, [mounted, accounts, selectedAccountId]);
-
-  const handleAccountChange = (accountId: string) => {
-    setSelectedAccountId(accountId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, accountId);
-  };
 
   const handleCharacterClick = (character: AccountCharacter) => {
     router.push(`/app/characters/${character.id}`);
@@ -71,10 +52,6 @@ export default function CharactersPage() {
 
   const isLoading = accountsLoading || charactersLoading;
 
-  const getAccountDisplay = (account: Account) => {
-    return account.nickname || `${account.uid} (${account.server})`;
-  };
-
   if (!mounted) {
     return null;
   }
@@ -88,24 +65,6 @@ export default function CharactersPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-        {/* Account selector */}
-        {accounts.length > 0 && (
-          <div className="mb-4 flex items-center gap-2">
-            <label className="text-sm text-muted-foreground">Account:</label>
-            <select
-              value={selectedAccountId ?? ''}
-              onChange={(e) => handleAccountChange(e.target.value)}
-              className="flex-1 sm:flex-none rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {getAccountDisplay(account)}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {/* Stats */}
         <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
           <StatCard
