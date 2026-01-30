@@ -2,6 +2,22 @@ export type Element = 'PYRO' | 'HYDRO' | 'ANEMO' | 'ELECTRO' | 'DENDRO' | 'CRYO'
 
 export type WeaponType = 'SWORD' | 'CLAYMORE' | 'POLEARM' | 'BOW' | 'CATALYST';
 
+export interface CharacterTalents {
+  '天赋1（普通攻击）'?: string;
+  '天赋2（元素战技）'?: string;
+  '天赋3（元素爆发）'?: string;
+  '天赋4（突破天赋）'?: string;
+  '天赋5（突破天赋）'?: string;
+  '天赋6（固有天赋）'?: string;
+  '天赋7（固有天赋）'?: string;
+  '天赋6（额外天赋）'?: string;
+  [key: string]: string | undefined;
+}
+
+export interface CharacterConstellations {
+  [key: string]: string;
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -9,6 +25,11 @@ export interface Character {
   weaponType: WeaponType;
   rarity: number;
   region: string | null;
+  affiliation: string | null; // 所属组织
+  visionAffiliation: string | null; // 神之眼所属地区
+  role: string | null; // 定位（如：辅助、输出）
+  talents: CharacterTalents | null; // 天赋详情
+  constellations: CharacterConstellations | null; // 命之座详情
   imageUrl: string | null;
 }
 

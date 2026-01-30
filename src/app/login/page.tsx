@@ -19,7 +19,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      window.location.href = '/app/achievements';
+      window.location.href = '/achievements';
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败');
     } finally {

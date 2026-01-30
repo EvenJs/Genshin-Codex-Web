@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getToken } from '@/lib/authToken';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useArtifacts } from '@/hooks/useArtifacts';
 import { apiFetch } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { ArtifactEquip } from '@/components/artifacts/ArtifactEquip';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, Star, LogIn, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AccountCharacter, Element } from '@/types/character';
-import type { UserArtifact } from '@/types/artifact';
 import { ELEMENT_COLORS, ELEMENT_NAMES, WEAPON_TYPE_NAMES } from '@/types/character';
 
 const ELEMENT_ICONS: Record<Element, string> = {
@@ -30,13 +30,14 @@ export default function CharacterDetailPage() {
   const mounted = useMounted();
   const characterId = params.id as string;
 
+  const { isLoggedIn, isLoading: authLoading, selectedAccountId } = useAuth();
+
   const [character, setCharacter] = useState<AccountCharacter | null>(null);
-  const [accountId, setAccountId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch all artifacts for the account to get equipped and available
-  const { items: allArtifacts, mutate: mutateArtifacts } = useArtifacts(accountId, {
+  const { items: allArtifacts, mutate: mutateArtifacts } = useArtifacts(selectedAccountId, {
     pageSize: 1000, // Get all artifacts
   });
 
@@ -48,31 +49,21 @@ export default function CharacterDetailPage() {
   // Get available (unequipped) artifacts
   const availableArtifacts = allArtifacts.filter((a) => !a.equippedById);
 
-  // Auth check and fetch character on mount
+  // Fetch character on mount
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || authLoading) return;
 
-    const token = getToken();
-    if (!token) {
-      window.location.href = '/login';
+    if (!isLoggedIn || !selectedAccountId) {
+      setIsLoading(false);
       return;
     }
-
-    // Get account ID from localStorage
-    const savedAccountId = localStorage.getItem('selected_account_id');
-    if (!savedAccountId) {
-      router.push('/app/characters');
-      return;
-    }
-
-    setAccountId(savedAccountId);
 
     // Fetch character details
     const fetchCharacter = async () => {
       try {
         setIsLoading(true);
         const data = await apiFetch<AccountCharacter>(
-          `/accounts/${savedAccountId}/characters/${characterId}`
+          `/accounts/${selectedAccountId}/characters/${characterId}`
         );
         setCharacter(data);
       } catch (err) {
@@ -84,41 +75,81 @@ export default function CharacterDetailPage() {
     };
 
     fetchCharacter();
-  }, [mounted, characterId, router]);
+  }, [mounted, authLoading, isLoggedIn, selectedAccountId, characterId]);
 
   const handleEquip = useCallback(
     async (artifactId: string) => {
-      if (!accountId) return;
+      if (!selectedAccountId) return;
 
-      await apiFetch(`/accounts/${accountId}/artifacts/${artifactId}`, {
+      await apiFetch(`/accounts/${selectedAccountId}/artifacts/${artifactId}`, {
         method: 'PATCH',
         body: JSON.stringify({ equippedById: characterId }),
       });
 
       await mutateArtifacts();
     },
-    [accountId, characterId, mutateArtifacts]
+    [selectedAccountId, characterId, mutateArtifacts]
   );
 
   const handleUnequip = useCallback(
     async (artifactId: string) => {
-      if (!accountId) return;
+      if (!selectedAccountId) return;
 
-      await apiFetch(`/accounts/${accountId}/artifacts/${artifactId}`, {
+      await apiFetch(`/accounts/${selectedAccountId}/artifacts/${artifactId}`, {
         method: 'PATCH',
         body: JSON.stringify({ equippedById: null }),
       });
 
       await mutateArtifacts();
     },
-    [accountId, mutateArtifacts]
+    [selectedAccountId, mutateArtifacts]
   );
 
   if (!mounted) {
     return null;
   }
 
-  if (isLoading) {
+  // Show login prompt if not logged in
+  if (!authLoading && !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card">
+          <div className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/characters')}
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back
+            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Character Details</h1>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
+          <div className="py-12 text-center">
+            <User className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              View Your Character
+            </h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Login to view your character details and manage equipped artifacts.
+            </p>
+            <Link href="/login">
+              <Button>
+                <LogIn className="h-4 w-4 mr-2" />
+                Login
+              </Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="py-12 text-center text-muted-foreground">Loading...</div>
@@ -132,7 +163,7 @@ export default function CharacterDetailPage() {
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="text-center">
             <p className="text-destructive mb-4">{error || 'Character not found'}</p>
-            <Button onClick={() => router.push('/app/characters')}>
+            <Button onClick={() => router.push('/characters')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Characters
             </Button>
@@ -156,7 +187,7 @@ export default function CharacterDetailPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/app/characters')}
+            onClick={() => router.push('/characters')}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-1" />

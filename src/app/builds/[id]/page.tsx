@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getToken, getCurrentUserId } from '@/lib/authToken';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import { getCurrentUserId } from '@/lib/authToken';
 import { useBuild, useSavedBuilds, useMyBuilds } from '@/hooks/useBuilds';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAccountCharacters } from '@/hooks/useCharacters';
@@ -30,14 +32,11 @@ import {
   Globe,
   Lock,
   Sparkles,
-  Copy,
   Check,
+  LogIn,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { ELEMENT_COLORS } from '@/types/character';
 import type { UpdateBuildDto } from '@/types/build';
-
-const SELECTED_ACCOUNT_KEY = 'selected_account_id';
 
 export default function BuildDetailPage() {
   const params = useParams();
@@ -45,15 +44,17 @@ export default function BuildDetailPage() {
   const mounted = useMounted();
   const buildId = params.id as string;
 
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const { isLoggedIn, isLoading: authLoading, selectedAccountId } = useAuth();
+
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [localSelectedAccountId, setLocalSelectedAccountId] = useState<string | null>(selectedAccountId);
 
   const { build, isLoading: buildLoading, error: buildError, mutate: mutateBuild } = useBuild(buildId);
   const { accounts } = useAccounts();
-  const { characters: accountCharacters } = useAccountCharacters(selectedAccountId);
+  const { characters: accountCharacters } = useAccountCharacters(localSelectedAccountId);
   const { characters } = useCharacters();
   const { sets: artifactSets } = useArtifactSets();
   const { items: savedBuilds, saveBuild, unsaveBuild } = useSavedBuilds();
@@ -76,33 +77,20 @@ export default function BuildDetailPage() {
     isLoading: recommendationsLoading,
     error: recommendationsError,
   } = useRecommendations(
-    showRecommendations ? selectedAccountId : null,
+    showRecommendations ? localSelectedAccountId : null,
     showRecommendations && accountCharacter ? accountCharacter.id : null,
     { buildId }
   );
 
-  // Auth check on mount
+  // Initialize local selected account from context
   useEffect(() => {
-    if (!mounted) return;
-    const token = getToken();
-    if (!token) {
-      window.location.href = '/login';
+    if (selectedAccountId && !localSelectedAccountId) {
+      setLocalSelectedAccountId(selectedAccountId);
     }
-  }, [mounted]);
-
-  // Initialize selected account from localStorage
-  useEffect(() => {
-    if (!mounted || accounts.length === 0 || selectedAccountId) return;
-
-    const savedId = localStorage.getItem(SELECTED_ACCOUNT_KEY);
-    const validId = accounts.find((a) => a.id === savedId)?.id ?? accounts[0].id;
-    setSelectedAccountId(validId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, validId);
-  }, [mounted, accounts, selectedAccountId]);
+  }, [selectedAccountId, localSelectedAccountId]);
 
   const handleAccountChange = (accountId: string) => {
-    setSelectedAccountId(accountId);
-    localStorage.setItem(SELECTED_ACCOUNT_KEY, accountId);
+    setLocalSelectedAccountId(accountId);
     setShowRecommendations(false);
   };
 
@@ -128,7 +116,7 @@ export default function BuildDetailPage() {
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this build?')) return;
     await deleteBuild(buildId);
-    router.push('/app/builds');
+    router.push('/builds');
   };
 
   const handleShare = async () => {
@@ -162,7 +150,7 @@ export default function BuildDetailPage() {
     return null;
   }
 
-  if (buildLoading) {
+  if (buildLoading || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
@@ -174,7 +162,7 @@ export default function BuildDetailPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <div className="text-destructive">Build not found or access denied</div>
-        <Button variant="outline" onClick={() => router.push('/app/builds')}>
+        <Button variant="outline" onClick={() => router.push('/builds')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Builds
         </Button>
@@ -195,7 +183,7 @@ export default function BuildDetailPage() {
       >
         <div className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
           <div className="flex items-center gap-2 mb-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push('/app/builds')}>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/builds')}>
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </Button>
@@ -235,7 +223,7 @@ export default function BuildDetailPage() {
 
             {/* Actions */}
             <div className="flex gap-2 shrink-0">
-              {!isOwner && (
+              {isLoggedIn && !isOwner && (
                 <Button
                   variant={isSaved ? 'default' : 'outline'}
                   size="sm"
@@ -283,6 +271,21 @@ export default function BuildDetailPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6 space-y-6">
+        {/* Login prompt for guests */}
+        {!isLoggedIn && (
+          <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Login to save builds and get personalized recommendations
+            </p>
+            <Link href="/login">
+              <Button size="sm" variant="outline">
+                <LogIn className="h-4 w-4 mr-1" />
+                Login
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Description */}
         {build.description && (
           <div className="rounded-lg border border-border bg-card p-4">
@@ -378,60 +381,64 @@ export default function BuildDetailPage() {
           </div>
         )}
 
-        {/* Recommendations Section */}
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Get Recommendations</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select an account to get personalized artifact recommendations based on this build.
-          </p>
+        {/* Recommendations Section - only for logged in users */}
+        {isLoggedIn && (
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h2 className="text-lg font-semibold text-foreground mb-3">Get Recommendations</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select an account to get personalized artifact recommendations based on this build.
+            </p>
 
-          <div className="flex items-center gap-3 mb-4">
-            <select
-              value={selectedAccountId ?? ''}
-              onChange={(e) => handleAccountChange(e.target.value)}
-              className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.nickname || `${account.uid} (${account.server})`}
-                </option>
-              ))}
-            </select>
-            <Button onClick={handleGetRecommendations} disabled={!selectedAccountId}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Get Recommendations
-            </Button>
+            <div className="flex items-center gap-3 mb-4">
+              <select
+                value={localSelectedAccountId ?? ''}
+                onChange={(e) => handleAccountChange(e.target.value)}
+                className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.nickname || `${account.uid} (${account.server})`}
+                  </option>
+                ))}
+              </select>
+              <Button onClick={handleGetRecommendations} disabled={!localSelectedAccountId}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Get Recommendations
+              </Button>
+            </div>
+
+            {showRecommendations && (
+              <RecommendationResult
+                result={recommendations}
+                isLoading={recommendationsLoading}
+                error={recommendationsError}
+              />
+            )}
           </div>
-
-          {showRecommendations && (
-            <RecommendationResult
-              result={recommendations}
-              isLoading={recommendationsLoading}
-              error={recommendationsError}
-            />
-          )}
-        </div>
+        )}
       </main>
 
-      {/* Edit Build Sheet */}
-      <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>Edit Build</SheetTitle>
-            <SheetDescription>Update your artifact build configuration.</SheetDescription>
-          </SheetHeader>
-          <div className="p-4">
-            <BuildForm
-              characters={characters}
-              artifactSets={artifactSets}
-              initialData={build}
-              onSubmit={handleEdit}
-              onCancel={() => setIsEditOpen(false)}
-              isSubmitting={isSubmitting}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Edit Build Sheet - only for owner */}
+      {isOwner && (
+        <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>Edit Build</SheetTitle>
+              <SheetDescription>Update your artifact build configuration.</SheetDescription>
+            </SheetHeader>
+            <div className="p-4">
+              <BuildForm
+                characters={characters}
+                artifactSets={artifactSets}
+                initialData={build}
+                onSubmit={handleEdit}
+                onCancel={() => setIsEditOpen(false)}
+                isSubmitting={isSubmitting}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

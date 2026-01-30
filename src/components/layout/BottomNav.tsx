@@ -43,42 +43,39 @@ export function BottomNav() {
 
   const isAchievementsActive =
     pathname === '/achievements' || pathname.startsWith('/achievements/');
-  const isMyAchievementsActive = pathname === '/app/achievements';
-  const isArtifactsActive = pathname === '/app/artifacts';
-  const isCharactersActive = pathname.startsWith('/app/characters');
-  const isAccountsActive = pathname === '/app/accounts';
+  const isArtifactsActive = pathname === '/artifacts' || pathname.startsWith('/artifacts/');
+  const isCharactersActive = pathname === '/characters' || pathname.startsWith('/characters/');
+  const isBuildsActive = pathname === '/builds' || pathname.startsWith('/builds/');
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card md:hidden">
       <div className="flex items-center justify-around px-2 safe-area-pb">
         <NavItem
           href="/achievements"
-          icon={<Home className="h-5 w-5" />}
-          label={t('browse')}
-          isActive={isAchievementsActive && !isMyAchievementsActive}
+          icon={<Trophy className="h-5 w-5" />}
+          label={t('achievements')}
+          isActive={isAchievementsActive}
+        />
+        <NavItem
+          href="/characters"
+          icon={<Users className="h-5 w-5" />}
+          label={t('characters')}
+          isActive={isCharactersActive}
+        />
+        <NavItem
+          href="/artifacts"
+          icon={<Gem className="h-5 w-5" />}
+          label={t('artifacts')}
+          isActive={isArtifactsActive}
         />
 
         {!isLoading && isLoggedIn ? (
-          <>
-            <NavItem
-              href="/app/achievements"
-              icon={<Trophy className="h-5 w-5" />}
-              label={t('progress')}
-              isActive={isMyAchievementsActive}
-            />
-            <NavItem
-              href="/app/artifacts"
-              icon={<Gem className="h-5 w-5" />}
-              label={t('artifacts')}
-              isActive={isArtifactsActive}
-            />
-            <NavItem
-              href="/app/characters"
-              icon={<Users className="h-5 w-5" />}
-              label={t('characters')}
-              isActive={isCharactersActive}
-            />
-          </>
+          <NavItem
+            href="/builds"
+            icon={<Home className="h-5 w-5" />}
+            label={t('builds')}
+            isActive={isBuildsActive}
+          />
         ) : !isLoading ? (
           <NavItem
             href="/login"

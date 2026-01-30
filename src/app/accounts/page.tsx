@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import { useMounted } from '@/hooks/useMounted';
+import { Button } from '@/components/ui/button';
+import { LogIn, User } from 'lucide-react';
 
 const SERVERS = [
   { value: 'cn_gf01', label: '天空岛 (cn_gf01)' },
@@ -14,6 +17,7 @@ const SERVERS = [
 ];
 
 export default function AccountsPage() {
+  const mounted = useMounted();
   const {
     isLoggedIn,
     isLoading,
@@ -35,13 +39,6 @@ export default function AccountsPage() {
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
-      window.location.href = '/login';
-    }
-  }, [isLoading, isLoggedIn]);
 
   const handleSelect = (accountId: string) => {
     selectAccount(accountId);
@@ -88,9 +85,39 @@ export default function AccountsPage() {
     }
   };
 
-  // Show nothing while checking auth
-  if (isLoading) {
+  if (!mounted || isLoading) {
     return null;
+  }
+
+  // Show login prompt if not logged in
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card">
+          <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">账号管理</h1>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
+          <div className="py-12 text-center">
+            <User className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">
+              管理您的游戏账号
+            </h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              登录后可以添加和管理您的原神游戏账号，追踪不同账号的成就、角色和圣遗物。
+            </p>
+            <Link href="/login">
+              <Button>
+                <LogIn className="h-4 w-4 mr-2" />
+                登录以开始
+              </Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -99,7 +126,7 @@ export default function AccountsPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">账号管理</h1>
           <Link
-            href="/app/achievements"
+            href="/achievements"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white font-medium hover:bg-blue-700"
           >
             去我的成就

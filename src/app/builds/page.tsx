@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getToken } from '@/lib/authToken';
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 import { useMyBuilds, useSavedBuilds, usePublicBuilds } from '@/hooks/useBuilds';
 import { useCharacters } from '@/hooks/useCharacters';
 import { useArtifactSets } from '@/hooks/useArtifacts';
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/sheet';
 import { BuildForm } from '@/components/builds/BuildForm';
 import { BuildCard } from '@/components/builds/BuildCard';
-import { ChevronLeft, ChevronRight, Plus, Layers, Heart, Globe } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Layers, Heart, Globe, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CreateBuildDto } from '@/types/build';
 
@@ -26,13 +27,16 @@ type TabType = 'my' | 'saved' | 'public';
 export default function BuildsPage() {
   const router = useRouter();
   const mounted = useMounted();
-  const [activeTab, setActiveTab] = useState<TabType>('my');
+  const { isLoggedIn, isLoading: authLoading } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<TabType>('public');
   const [page, setPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCharacterId, setSelectedCharacterId] = useState('');
 
   const pageSize = 12;
+  const isUserMode = isLoggedIn;
 
   const { characters, isLoading: charactersLoading } = useCharacters();
   const { sets: artifactSets, isLoading: setsLoading } = useArtifactSets();
@@ -43,7 +47,6 @@ export default function BuildsPage() {
     isLoading: myLoading,
     error: myError,
     createBuild,
-    deleteBuild,
   } = useMyBuilds({
     page: activeTab === 'my' ? page : 1,
     pageSize,
@@ -55,7 +58,6 @@ export default function BuildsPage() {
     total: savedTotal,
     isLoading: savedLoading,
     error: savedError,
-    unsaveBuild,
   } = useSavedBuilds({
     page: activeTab === 'saved' ? page : 1,
     pageSize,
@@ -73,16 +75,11 @@ export default function BuildsPage() {
     characterId: selectedCharacterId || undefined,
   });
 
-  // Auth check on mount
-  useEffect(() => {
-    if (!mounted) return;
-    const token = getToken();
-    if (!token) {
-      window.location.href = '/login';
-    }
-  }, [mounted]);
-
   const handleTabChange = (tab: TabType) => {
+    // Only allow public tab for non-logged in users
+    if (!isUserMode && tab !== 'public') {
+      return;
+    }
     setActiveTab(tab);
     setPage(1);
   };
@@ -103,7 +100,7 @@ export default function BuildsPage() {
   };
 
   const handleBuildClick = (buildId: string) => {
-    router.push(`/app/builds/${buildId}`);
+    router.push(`/builds/${buildId}`);
   };
 
   // Get current data based on active tab
@@ -125,7 +122,7 @@ export default function BuildsPage() {
 
   const { items, total, isLoading, error } = getCurrentData();
   const totalPages = Math.ceil(total / pageSize);
-  const isDataLoading = isLoading || charactersLoading || setsLoading;
+  const isDataLoading = authLoading || isLoading || charactersLoading || setsLoading;
 
   if (!mounted) {
     return null;
@@ -136,66 +133,98 @@ export default function BuildsPage() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Artifact Builds</h1>
-            <Button onClick={() => setIsFormOpen(true)} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              New Build
-            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              {isUserMode ? 'Artifact Builds' : 'Community Builds'}
+            </h1>
+            {isUserMode && (
+              <Button onClick={() => setIsFormOpen(true)} size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                New Build
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-        {/* Stats cards */}
-        <div className="mb-4 sm:mb-6 grid grid-cols-3 gap-2 sm:gap-4">
-          <StatCard
-            value={myTotal}
-            label="My Builds"
-            icon={<Layers className="h-4 w-4" />}
-            active={activeTab === 'my'}
-            onClick={() => handleTabChange('my')}
-          />
-          <StatCard
-            value={savedTotal}
-            label="Saved"
-            icon={<Heart className="h-4 w-4" />}
-            variant="accent"
-            active={activeTab === 'saved'}
-            onClick={() => handleTabChange('saved')}
-          />
-          <StatCard
-            value={publicTotal}
-            label="Community"
-            icon={<Globe className="h-4 w-4" />}
-            active={activeTab === 'public'}
-            onClick={() => handleTabChange('public')}
-          />
-        </div>
+        {/* Login prompt for guests */}
+        {!authLoading && !isLoggedIn && (
+          <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Login to create and save your own builds
+            </p>
+            <Link href="/login">
+              <Button size="sm" variant="outline">
+                <LogIn className="h-4 w-4 mr-1" />
+                Login
+              </Button>
+            </Link>
+          </div>
+        )}
 
-        {/* Tab buttons (mobile) */}
-        <div className="mb-4 flex gap-1 overflow-x-auto pb-1 sm:hidden">
-          <Button
-            variant={activeTab === 'my' ? 'default' : 'secondary'}
-            size="sm"
-            onClick={() => handleTabChange('my')}
-          >
-            My Builds
-          </Button>
-          <Button
-            variant={activeTab === 'saved' ? 'default' : 'secondary'}
-            size="sm"
-            onClick={() => handleTabChange('saved')}
-          >
-            Saved
-          </Button>
-          <Button
-            variant={activeTab === 'public' ? 'default' : 'secondary'}
-            size="sm"
-            onClick={() => handleTabChange('public')}
-          >
-            Community
-          </Button>
-        </div>
+        {/* Stats cards - only show all tabs for logged in users */}
+        {isUserMode ? (
+          <div className="mb-4 sm:mb-6 grid grid-cols-3 gap-2 sm:gap-4">
+            <StatCard
+              value={myTotal}
+              label="My Builds"
+              icon={<Layers className="h-4 w-4" />}
+              active={activeTab === 'my'}
+              onClick={() => handleTabChange('my')}
+            />
+            <StatCard
+              value={savedTotal}
+              label="Saved"
+              icon={<Heart className="h-4 w-4" />}
+              variant="accent"
+              active={activeTab === 'saved'}
+              onClick={() => handleTabChange('saved')}
+            />
+            <StatCard
+              value={publicTotal}
+              label="Community"
+              icon={<Globe className="h-4 w-4" />}
+              active={activeTab === 'public'}
+              onClick={() => handleTabChange('public')}
+            />
+          </div>
+        ) : (
+          <div className="mb-4 sm:mb-6">
+            <StatCard
+              value={publicTotal}
+              label="Community Builds"
+              icon={<Globe className="h-4 w-4" />}
+              active={true}
+            />
+          </div>
+        )}
+
+        {/* Tab buttons (mobile) - only for logged in users */}
+        {isUserMode && (
+          <div className="mb-4 flex gap-1 overflow-x-auto pb-1 sm:hidden">
+            <Button
+              variant={activeTab === 'my' ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => handleTabChange('my')}
+            >
+              My Builds
+            </Button>
+            <Button
+              variant={activeTab === 'saved' ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => handleTabChange('saved')}
+            >
+              Saved
+            </Button>
+            <Button
+              variant={activeTab === 'public' ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => handleTabChange('public')}
+            >
+              Community
+            </Button>
+          </div>
+        )}
 
         {/* Character filter */}
         <div className="mb-4 flex items-center gap-2">
@@ -274,26 +303,28 @@ export default function BuildsPage() {
         )}
       </main>
 
-      {/* Create Build Sheet */}
-      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>Create New Build</SheetTitle>
-            <SheetDescription>
-              Create an artifact build configuration for a character.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="p-4">
-            <BuildForm
-              characters={characters}
-              artifactSets={artifactSets}
-              onSubmit={handleCreateBuild}
-              onCancel={() => setIsFormOpen(false)}
-              isSubmitting={isSubmitting}
-            />
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Create Build Sheet - only for logged in users */}
+      {isUserMode && (
+        <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>Create New Build</SheetTitle>
+              <SheetDescription>
+                Create an artifact build configuration for a character.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="p-4">
+              <BuildForm
+                characters={characters}
+                artifactSets={artifactSets}
+                onSubmit={handleCreateBuild}
+                onCancel={() => setIsFormOpen(false)}
+                isSubmitting={isSubmitting}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

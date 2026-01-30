@@ -15,19 +15,19 @@ export function NavLinks({ isLoggedIn, onLogout }: NavLinksProps) {
     return (
       <>
         <Link
-          href="/app/achievements"
+          href="/achievements"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           {t('achievements')}
         </Link>
         <Link
-          href="/app/artifacts"
+          href="/artifacts"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           {t('artifacts')}
         </Link>
         <Link
-          href="/app/characters"
+          href="/characters"
           className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           {t('characters')}

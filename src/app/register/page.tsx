@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
     try {
       await register(email, password);
-      window.location.href = '/app/achievements';
+      window.location.href = '/achievements';
     } catch (err) {
       setError(err instanceof Error ? err.message : '注册失败');
     } finally {
