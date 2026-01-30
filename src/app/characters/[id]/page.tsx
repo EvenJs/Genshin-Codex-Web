@@ -6,12 +6,12 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { useArtifacts } from '@/hooks/useArtifacts';
-import { apiFetch } from '@/lib/apiClient';
+import { apiFetch, ApiError } from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { ArtifactEquip } from '@/components/artifacts/ArtifactEquip';
 import { ArrowLeft, Star, LogIn, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { AccountCharacter, Element } from '@/types/character';
+import type { AccountCharacter, Character, Element } from '@/types/character';
 import { ELEMENT_COLORS, ELEMENT_NAMES, WEAPON_TYPE_NAMES } from '@/types/character';
 
 const ELEMENT_ICONS: Record<Element, string> = {
@@ -32,40 +32,50 @@ export default function CharacterDetailPage() {
 
   const { isLoggedIn, isLoading: authLoading, selectedAccountId } = useAuth();
 
-  const [character, setCharacter] = useState<AccountCharacter | null>(null);
+  const [accountCharacter, setAccountCharacter] = useState<AccountCharacter | null>(null);
+  const [publicCharacter, setPublicCharacter] = useState<Character | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch all artifacts for the account to get equipped and available
   const { items: allArtifacts, mutate: mutateArtifacts } = useArtifacts(selectedAccountId, {
-    pageSize: 1000, // Get all artifacts
+    pageSize: 100, // API max page size is 100
   });
 
-  // Get equipped artifacts for this character
-  const equippedArtifacts = allArtifacts.filter(
-    (a) => a.equippedBy?.id === characterId
-  );
+  const equippedArtifacts = accountCharacter
+    ? allArtifacts.filter((a) => a.equippedBy?.id === accountCharacter.id)
+    : [];
 
   // Get available (unequipped) artifacts
   const availableArtifacts = allArtifacts.filter((a) => !a.equippedById);
 
-  // Fetch character on mount
+  // Fetch character on mount (prefer account character if owned)
   useEffect(() => {
     if (!mounted || authLoading) return;
 
-    if (!isLoggedIn || !selectedAccountId) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Fetch character details
     const fetchCharacter = async () => {
       try {
         setIsLoading(true);
-        const data = await apiFetch<AccountCharacter>(
-          `/accounts/${selectedAccountId}/characters/${characterId}`
-        );
-        setCharacter(data);
+        setError(null);
+
+        if (isLoggedIn && selectedAccountId) {
+          try {
+            const data = await apiFetch<AccountCharacter>(
+              `/accounts/${selectedAccountId}/characters/${characterId}`
+            );
+            setAccountCharacter(data);
+            setPublicCharacter(data.character);
+            return;
+          } catch (err) {
+            if (err instanceof ApiError && err.status !== 404) {
+              throw err;
+            }
+          }
+        }
+
+        const data = await apiFetch<Character>(`/characters/${characterId}`);
+        setAccountCharacter(null);
+        setPublicCharacter(data);
       } catch (err) {
         console.error('Failed to fetch character:', err);
         setError(err instanceof Error ? err.message : 'Failed to load character');
@@ -109,46 +119,6 @@ export default function CharacterDetailPage() {
     return null;
   }
 
-  // Show login prompt if not logged in
-  if (!authLoading && !isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/characters')}
-              className="mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Character Details</h1>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
-          <div className="py-12 text-center">
-            <User className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              View Your Character
-            </h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Login to view your character details and manage equipped artifacts.
-            </p>
-            <Link href="/login">
-              <Button>
-                <LogIn className="h-4 w-4 mr-2" />
-                Login
-              </Button>
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -157,7 +127,7 @@ export default function CharacterDetailPage() {
     );
   }
 
-  if (error || !character) {
+  if (error || !publicCharacter) {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-4xl px-4 py-12">
@@ -173,8 +143,9 @@ export default function CharacterDetailPage() {
     );
   }
 
-  const { character: charInfo, level, constellation } = character;
-  const elementColor = ELEMENT_COLORS[charInfo.element];
+  const charInfo = publicCharacter;
+  const elementColor = charInfo.element ? ELEMENT_COLORS[charInfo.element] : '#94a3b8';
+  const owned = !!accountCharacter;
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,10 +168,22 @@ export default function CharacterDetailPage() {
           <div className="flex items-start gap-4">
             {/* Avatar */}
             <div
-              className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-xl text-3xl sm:text-4xl shrink-0"
+              className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-xl text-3xl sm:text-4xl shrink-0 overflow-hidden"
               style={{ backgroundColor: `${elementColor}30` }}
             >
-              {ELEMENT_ICONS[charInfo.element]}
+              {charInfo.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={charInfo.imageUrl}
+                  alt={charInfo.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : charInfo.element ? (
+                ELEMENT_ICONS[charInfo.element]
+              ) : (
+                <User className="h-8 w-8 text-muted-foreground" />
+              )}
             </div>
 
             {/* Info */}
@@ -209,19 +192,22 @@ export default function CharacterDetailPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                   {charInfo.name}
                 </h1>
-                {constellation > 0 && (
+                {owned && accountCharacter && accountCharacter.constellation > 0 && (
                   <span className="rounded bg-primary/20 px-2 py-0.5 text-sm font-medium text-primary">
-                    C{constellation}
+                    C{accountCharacter.constellation}
                   </span>
                 )}
               </div>
 
               <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1">
-                  {ELEMENT_ICONS[charInfo.element]} {ELEMENT_NAMES[charInfo.element]}
+                  {charInfo.element ? ELEMENT_ICONS[charInfo.element] : '❔'}{' '}
+                  {charInfo.element ? ELEMENT_NAMES[charInfo.element] : 'Unknown'}
                 </span>
                 <span>•</span>
-                <span>{WEAPON_TYPE_NAMES[charInfo.weaponType]}</span>
+                <span>
+                  {charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : 'Unknown'}
+                </span>
                 {charInfo.region && (
                   <>
                     <span>•</span>
@@ -232,18 +218,24 @@ export default function CharacterDetailPage() {
 
               {/* Rarity and Level */}
               <div className="mt-2 flex items-center gap-4">
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: charInfo.rarity }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        'h-4 w-4 fill-current',
-                        charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-                      )}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold text-foreground">Lv. {level}</span>
+                {charInfo.rarity && (
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: charInfo.rarity }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          'h-4 w-4 fill-current',
+                          charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
+                        )}
+                      />
+                    ))}
+                  </div>
+                )}
+                {owned && accountCharacter && (
+                  <span className="text-lg font-semibold text-foreground">
+                    Lv. {accountCharacter.level}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -252,18 +244,90 @@ export default function CharacterDetailPage() {
 
       {/* Main content */}
       <main className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
-        {/* Artifacts Section */}
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Artifacts</h2>
+        {!isLoggedIn && (
+          <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              登录后可管理角色等级、命座与装备
+            </p>
+            <Link href="/login">
+              <Button size="sm" variant="outline">
+                <LogIn className="h-4 w-4 mr-1" />
+                登录
+              </Button>
+            </Link>
+          </div>
+        )}
 
-          <ArtifactEquip
-            characterName={charInfo.name}
-            equippedArtifacts={equippedArtifacts}
-            availableArtifacts={availableArtifacts}
-            onEquip={handleEquip}
-            onUnequip={handleUnequip}
-          />
+        {/* Detail Section */}
+        <section className="mb-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h2 className="mb-2 text-base font-semibold text-foreground">基础信息</h2>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div>所属：{charInfo.affiliation ?? '未知'}</div>
+              <div>神之眼所属：{charInfo.visionAffiliation ?? '未知'}</div>
+              <div>定位：{charInfo.role ?? '未知'}</div>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <h2 className="mb-2 text-base font-semibold text-foreground">元素与武器</h2>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div>元素：{charInfo.element ? ELEMENT_NAMES[charInfo.element] : '未知'}</div>
+              <div>
+                武器类型：{charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : '未知'}
+              </div>
+              <div>地区：{charInfo.region ?? '未知'}</div>
+            </div>
+          </div>
         </section>
+
+        {/* Talents */}
+        {charInfo.talents && (
+          <section className="mb-6">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">天赋</h2>
+            <div className="space-y-3">
+              {Object.entries(charInfo.talents).map(([title, content]) => (
+                <div key={title} className="rounded-lg border border-border bg-card p-4">
+                  <div className="mb-2 text-sm font-semibold text-foreground">{title}</div>
+                  <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                    {content}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Constellations */}
+        {charInfo.constellations && (
+          <section className="mb-6">
+            <h2 className="mb-3 text-lg font-semibold text-foreground">命之座</h2>
+            <div className="space-y-3">
+              {Object.entries(charInfo.constellations).map(([title, content]) => (
+                <div key={title} className="rounded-lg border border-border bg-card p-4">
+                  <div className="mb-2 text-sm font-semibold text-foreground">{title}</div>
+                  <pre className="whitespace-pre-wrap text-sm text-muted-foreground">
+                    {content}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Artifacts Section */}
+        {owned && accountCharacter && (
+          <section>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">Artifacts</h2>
+
+            <ArtifactEquip
+              characterName={charInfo.name}
+              equippedArtifacts={equippedArtifacts}
+              availableArtifacts={availableArtifacts}
+              onEquip={handleEquip}
+              onUnequip={handleUnequip}
+            />
+          </section>
+        )}
       </main>
     </div>
   );

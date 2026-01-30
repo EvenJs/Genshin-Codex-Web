@@ -61,7 +61,9 @@ export function CharacterForm({
 
   // Sort by rarity desc, then name asc
   const sortedCharacters = [...filteredCharacters].sort((a, b) => {
-    if (a.rarity !== b.rarity) return b.rarity - a.rarity;
+    const rarityA = a.rarity ?? 0;
+    const rarityB = b.rarity ?? 0;
+    if (rarityA !== rarityB) return rarityB - rarityA;
     return a.name.localeCompare(b.name);
   });
 
@@ -128,22 +130,34 @@ export function CharacterForm({
                     )}
                   >
                     <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg text-lg"
+                      className="flex h-10 w-10 items-center justify-center rounded-lg text-lg overflow-hidden"
                       style={{ backgroundColor: `${ELEMENT_COLORS[char.element]}20` }}
                     >
-                      {ELEMENT_ICONS[char.element]}
+                      {char.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={char.imageUrl}
+                          alt={char.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        ELEMENT_ICONS[char.element]
+                      )}
                     </div>
                     <span className="mt-1 text-xs font-medium text-foreground line-clamp-1">
                       {char.name}
                     </span>
-                    <span
-                      className={cn(
-                        'text-xs',
-                        char.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-                      )}
-                    >
-                      {'★'.repeat(char.rarity)}
-                    </span>
+                    {char.rarity && (
+                      <span
+                        className={cn(
+                          'text-xs',
+                          char.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
+                        )}
+                      >
+                        {'★'.repeat(char.rarity)}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -157,15 +171,28 @@ export function CharacterForm({
         <div className="rounded-lg border border-border bg-muted/30 p-3">
           <div className="flex items-center gap-3">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-lg text-xl"
+              className="flex h-12 w-12 items-center justify-center rounded-lg text-xl overflow-hidden"
               style={{ backgroundColor: `${ELEMENT_COLORS[selectedCharacter.element]}20` }}
             >
-              {ELEMENT_ICONS[selectedCharacter.element]}
+              {selectedCharacter.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={selectedCharacter.imageUrl}
+                  alt={selectedCharacter.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                ELEMENT_ICONS[selectedCharacter.element]
+              )}
             </div>
             <div>
               <div className="font-medium text-foreground">{selectedCharacter.name}</div>
               <div className="text-xs text-muted-foreground">
-                {ELEMENT_NAMES[selectedCharacter.element]} · {WEAPON_TYPE_NAMES[selectedCharacter.weaponType]}
+                {ELEMENT_NAMES[selectedCharacter.element]} ·{' '}
+                {selectedCharacter.weaponType
+                  ? WEAPON_TYPE_NAMES[selectedCharacter.weaponType]
+                  : 'Unknown'}
               </div>
             </div>
           </div>

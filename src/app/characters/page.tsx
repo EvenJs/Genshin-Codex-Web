@@ -497,18 +497,20 @@ function PublicCharacterCard({ character }: PublicCharacterCardProps) {
           {character.name}
         </h3>
         <div className="mt-1 text-center text-xs text-muted-foreground">
-          {ELEMENT_NAMES[character.element]} · {WEAPON_TYPE_NAMES[character.weaponType]}
+          {ELEMENT_NAMES[character.element]} · {character.weaponType ? WEAPON_TYPE_NAMES[character.weaponType] : 'Unknown'}
         </div>
-        <div className="mt-1 flex justify-center">
-          <span
-            className={cn(
-              'text-xs',
-              character.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-            )}
-          >
-            {'★'.repeat(character.rarity)}
-          </span>
-        </div>
+        {character.rarity && (
+          <div className="mt-1 flex justify-center">
+            <span
+              className={cn(
+                'text-xs',
+                character.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
+              )}
+            >
+              {'★'.repeat(character.rarity)}
+            </span>
+          </div>
+        )}
         {character.region && (
           <div className="mt-1 text-center text-xs text-muted-foreground">
             {character.region}

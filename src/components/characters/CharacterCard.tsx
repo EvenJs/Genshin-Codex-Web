@@ -25,6 +25,7 @@ interface CharacterCardProps {
 export function CharacterCard({ character, onClick, compact = false }: CharacterCardProps) {
   const { character: charInfo, level, constellation } = character;
   const elementColor = ELEMENT_COLORS[charInfo.element];
+  const weaponLabel = charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : 'Unknown';
   const avatarUrl = charInfo.imageUrl;
 
   if (compact) {
@@ -66,17 +67,19 @@ export function CharacterCard({ character, onClick, compact = false }: Character
         </div>
 
         {/* Rarity stars */}
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: charInfo.rarity }).map((_, i) => (
-            <Star
-              key={i}
-              className={cn(
-                'h-3 w-3 fill-current',
-                charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-              )}
-            />
-          ))}
-        </div>
+        {charInfo.rarity && (
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: charInfo.rarity }).map((_, i) => (
+              <Star
+                key={i}
+                className={cn(
+                  'h-3 w-3 fill-current',
+                  charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -131,21 +134,23 @@ export function CharacterCard({ character, onClick, compact = false }: Character
                 {ELEMENT_ICONS[charInfo.element]} {ELEMENT_NAMES[charInfo.element]}
               </span>
               <span>•</span>
-              <span>{WEAPON_TYPE_NAMES[charInfo.weaponType]}</span>
+              <span>{weaponLabel}</span>
             </div>
 
             {/* Rarity */}
-            <div className="mt-1 flex items-center gap-0.5">
-              {Array.from({ length: charInfo.rarity }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={cn(
-                    'h-3 w-3 fill-current',
-                    charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-                  )}
-                />
-              ))}
-            </div>
+            {charInfo.rarity && (
+              <div className="mt-1 flex items-center gap-0.5">
+                {Array.from({ length: charInfo.rarity }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={cn(
+                      'h-3 w-3 fill-current',
+                      charInfo.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
+                    )}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

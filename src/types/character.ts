@@ -22,8 +22,8 @@ export interface Character {
   id: string;
   name: string;
   element: Element;
-  weaponType: WeaponType;
-  rarity: number;
+  weaponType: WeaponType | null;
+  rarity: number | null;
   region: string | null;
   affiliation: string | null; // 所属组织
   visionAffiliation: string | null; // 神之眼所属地区
