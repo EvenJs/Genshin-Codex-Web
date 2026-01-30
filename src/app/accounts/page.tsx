@@ -2,22 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
 import { Button } from '@/components/ui/button';
 import { LogIn, User } from 'lucide-react';
 
 const SERVERS = [
-  { value: 'cn_gf01', label: '天空岛 (cn_gf01)' },
-  { value: 'cn_qd01', label: '世界树 (cn_qd01)' },
-  { value: 'os_usa', label: 'America (os_usa)' },
-  { value: 'os_euro', label: 'Europe (os_euro)' },
-  { value: 'os_asia', label: 'Asia (os_asia)' },
-  { value: 'os_cht', label: 'TW/HK/MO (os_cht)' },
+  { value: 'cn_gf01', labelKey: 'cn_gf01' },
+  { value: 'cn_qd01', labelKey: 'cn_qd01' },
+  { value: 'os_usa', labelKey: 'os_usa' },
+  { value: 'os_euro', labelKey: 'os_euro' },
+  { value: 'os_asia', labelKey: 'os_asia' },
+  { value: 'os_cht', labelKey: 'os_cht' },
 ];
 
 export default function AccountsPage() {
   const mounted = useMounted();
+  const tAccount = useTranslations('account');
+  const tAccountsPage = useTranslations('accountsPage');
+  const tServer = useTranslations('server');
+  const tCommon = useTranslations('common');
   const {
     isLoggedIn,
     isLoading,
@@ -49,7 +54,7 @@ export default function AccountsPage() {
     setFormError(null);
 
     if (!uid.trim()) {
-      setFormError('UID 不能为空');
+      setFormError(tAccountsPage('uidRequired'));
       return;
     }
 
@@ -60,7 +65,7 @@ export default function AccountsPage() {
       setUid('');
       setNickname('');
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : '添加账号失败');
+      setFormError(err instanceof Error ? err.message : tAccountsPage('addFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +74,7 @@ export default function AccountsPage() {
   const handleDelete = async (e: React.MouseEvent, accountId: string) => {
     e.stopPropagation();
 
-    if (!confirm('确定要删除此账号吗？删除后无法恢复。')) {
+    if (!confirm(tAccount('deleteConfirm'))) {
       return;
     }
 
@@ -79,7 +84,7 @@ export default function AccountsPage() {
     try {
       await deleteAccount(accountId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '删除账号失败');
+      setError(err instanceof Error ? err.message : tAccountsPage('deleteFailed'));
     } finally {
       setDeletingId(null);
     }
@@ -95,7 +100,7 @@ export default function AccountsPage() {
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card">
           <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">账号管理</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">{tAccountsPage('title')}</h1>
           </div>
         </header>
 
@@ -103,15 +108,15 @@ export default function AccountsPage() {
           <div className="py-12 text-center">
             <User className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
             <h2 className="text-lg font-semibold text-foreground mb-2">
-              管理您的游戏账号
+              {tAccountsPage('loginPromptTitle')}
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              登录后可以添加和管理您的原神游戏账号，追踪不同账号的成就、角色和圣遗物。
+              {tAccountsPage('loginPromptBody')}
             </p>
             <Link href="/login">
               <Button>
                 <LogIn className="h-4 w-4 mr-2" />
-                登录以开始
+                {tAccountsPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -124,35 +129,39 @@ export default function AccountsPage() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       <main className="mx-auto max-w-5xl px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">账号管理</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            {tAccountsPage('title')}
+          </h1>
           <Link
             href="/achievements"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white font-medium hover:bg-blue-700"
           >
-            去我的成就
+            {tAccount('goToAchievements')}
           </Link>
         </div>
 
         {/* Add account form */}
         <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-800">
-          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">新增账号</h2>
+          <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">
+            {tAccount('addNewAccount')}
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                  UID <span className="text-red-500">*</span>
+                  {tAccount('uid')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={uid}
                   onChange={(e) => setUid(e.target.value)}
-                  placeholder="输入游戏 UID"
+                  placeholder={tAccountsPage('uidPlaceholder')}
                   className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                 />
               </div>
               <div>
                 <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                  服务器
+                  {tAccount('server')}
                 </label>
                 <select
                   value={server}
@@ -161,20 +170,20 @@ export default function AccountsPage() {
                 >
                   {SERVERS.map((s) => (
                     <option key={s.value} value={s.value}>
-                      {s.label}
+                      {tServer(s.labelKey)}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-                  昵称（可选）
+                  {tAccount('nickname')}
                 </label>
                 <input
                   type="text"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="备注名称"
+                  placeholder={tAccountsPage('nicknamePlaceholder')}
                   className="w-full rounded-lg border border-zinc-300 px-4 py-2 text-zinc-900 focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
                 />
               </div>
@@ -187,16 +196,20 @@ export default function AccountsPage() {
               disabled={submitting}
               className="rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {submitting ? '添加中...' : '添加账号'}
+              {submitting ? tAccount('adding') : tAccount('addAccount')}
             </button>
           </form>
         </div>
 
         {/* Account list */}
-        <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">我的账号</h2>
+        <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100 mb-4">
+          {tAccountsPage('myAccounts')}
+        </h2>
 
         {accountsLoading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
+          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+            {tCommon('loading')}
+          </div>
         )}
 
         {error && <div className="py-4 text-center text-red-500">{error}</div>}
@@ -205,7 +218,7 @@ export default function AccountsPage() {
           <>
             {accounts.length === 0 ? (
               <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">
-                暂无账号，请先添加游戏账号
+                {tAccount('noAccounts')}，{tAccount('noAccountsHint')}
               </div>
             ) : (
               <ul className="space-y-3">
@@ -221,16 +234,16 @@ export default function AccountsPage() {
                   >
                     <div>
                       <div className="font-medium text-zinc-900 dark:text-zinc-100">
-                        {account.nickname || '未设置昵称'}
+                        {account.nickname || tAccountsPage('nicknameFallback')}
                       </div>
                       <div className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                        UID: {account.uid} · {account.server}
+                        {tAccount('uid')}: {account.uid} · {tServer(account.server)}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {selectedAccountId === account.id && (
                         <span className="rounded bg-blue-600 px-2 py-1 text-xs text-white">
-                          当前选中
+                          {tAccount('currentlySelected')}
                         </span>
                       )}
                       <button
@@ -238,7 +251,7 @@ export default function AccountsPage() {
                         disabled={deletingId === account.id}
                         className="rounded px-3 py-1 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950"
                       >
-                        {deletingId === account.id ? '删除中...' : '删除'}
+                        {deletingId === account.id ? tAccount('deleting') : tCommon('delete')}
                       </button>
                     </div>
                   </li>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Collapsible,
@@ -31,6 +32,7 @@ export function FilterPanel({
   onClearFilters,
   hasActiveFilters,
 }: FilterPanelProps) {
+  const tPage = useTranslations('achievementsPage');
   const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount = [category, region].filter(Boolean).length;
@@ -48,7 +50,7 @@ export function FilterPanel({
               >
                 <span className="flex items-center gap-2">
                   <Filter className="h-4 w-4" />
-                  Filters
+                  {tPage('filters')}
                   {activeFilterCount > 0 && (
                     <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                       {activeFilterCount}
@@ -76,13 +78,13 @@ export function FilterPanel({
           </div>
           <CollapsibleContent className="mt-3 space-y-3">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Category</label>
+              <label className="text-sm font-medium text-foreground">{tPage('categoryLabel')}</label>
               <select
                 value={category}
                 onChange={(e) => onCategoryChange(e.target.value)}
                 className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">All Categories</option>
+                <option value="">{tPage('allCategories')}</option>
                 {allCategories.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -91,13 +93,13 @@ export function FilterPanel({
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Region</label>
+              <label className="text-sm font-medium text-foreground">{tPage('regionLabel')}</label>
               <select
                 value={region}
                 onChange={(e) => onRegionChange(e.target.value)}
                 className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value="">All Regions</option>
+                <option value="">{tPage('allRegions')}</option>
                 {allRegions.map((r) => (
                   <option key={r} value={r}>
                     {r}
@@ -112,13 +114,13 @@ export function FilterPanel({
       {/* Desktop: Always Visible */}
       <div className="hidden md:flex md:items-center md:gap-4">
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground whitespace-nowrap">Category:</label>
+          <label className="text-sm text-muted-foreground whitespace-nowrap">{tPage('categoryLabel')}:</label>
           <select
             value={category}
             onChange={(e) => onCategoryChange(e.target.value)}
             className="rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">All</option>
+            <option value="">{tPage('all')}</option>
             {allCategories.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -128,13 +130,13 @@ export function FilterPanel({
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground whitespace-nowrap">Region:</label>
+          <label className="text-sm text-muted-foreground whitespace-nowrap">{tPage('regionLabel')}:</label>
           <select
             value={region}
             onChange={(e) => onRegionChange(e.target.value)}
             className="rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">All</option>
+            <option value="">{tPage('all')}</option>
             {allRegions.map((r) => (
               <option key={r} value={r}>
                 {r}
@@ -146,7 +148,7 @@ export function FilterPanel({
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={onClearFilters}>
             <X className="h-4 w-4 mr-1" />
-            Clear
+            {tPage('clear')}
           </Button>
         )}
       </div>

@@ -1,9 +1,11 @@
 'use client';
 
 import { Heart, Users, Lock, Globe } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { Build } from '@/types/build';
 import { ELEMENT_COLORS } from '@/types/character';
+import { getArtifactSlotShortLabel, getArtifactStatLabel } from '@/lib/artifactI18n';
 
 interface BuildCardProps {
   build: Build;
@@ -18,6 +20,10 @@ export function BuildCard({
   showCreator = true,
   onClick,
 }: BuildCardProps) {
+  const tBuildCard = useTranslations('buildCard');
+  const tSlotShort = useTranslations('artifactSlotShort');
+  const tStat = useTranslations('artifactStat');
+  const tElement = useTranslations('element');
   const elementColor = ELEMENT_COLORS[build.character.element];
 
   if (variant === 'compact') {
@@ -47,7 +53,9 @@ export function BuildCard({
             )}
           </div>
           <div className="text-xs text-muted-foreground truncate">
-            {build.character.name} • {build.useFullSet ? '4pc' : '2+2'} {build.primarySet.name}
+            {build.character.name} •{' '}
+            {build.useFullSet ? tBuildCard('fullSetShort') : tBuildCard('mixSetShort')}{' '}
+            {build.primarySet.name}
           </div>
         </div>
 
@@ -96,7 +104,7 @@ export function BuildCard({
             <p className="text-sm text-muted-foreground">
               {build.character.name}
               <span className="mx-1">•</span>
-              <span style={{ color: elementColor }}>{build.character.element}</span>
+              <span style={{ color: elementColor }}>{tElement(build.character.element)}</span>
             </p>
           </div>
         </div>
@@ -104,30 +112,38 @@ export function BuildCard({
         {/* Set info */}
         <div className="mb-3 p-2 rounded bg-muted/30">
           <div className="text-sm font-medium text-foreground">
-            {build.useFullSet ? '4pc' : '2pc'} {build.primarySet.name}
+            {build.useFullSet ? tBuildCard('fullSetShort') : tBuildCard('twoPieceShort')}{' '}
+            {build.primarySet.name}
           </div>
           {!build.useFullSet && build.secondarySet && (
-            <div className="text-sm text-muted-foreground">+ 2pc {build.secondarySet.name}</div>
+            <div className="text-sm text-muted-foreground">
+              {tBuildCard('secondaryTwoPiece', { name: build.secondarySet.name })}
+            </div>
           )}
         </div>
 
         {/* Main stats recommendation */}
         <div className="mb-3">
-          <div className="text-xs text-muted-foreground mb-1">Recommended Main Stats</div>
+          <div className="text-xs text-muted-foreground mb-1">
+            {tBuildCard('recommendedMainStats')}
+          </div>
           <div className="flex flex-wrap gap-1">
             {build.recommendedMainStats.SANDS && (
               <span className="px-2 py-0.5 rounded bg-muted text-xs text-foreground">
-                Sands: {build.recommendedMainStats.SANDS}
+                {getArtifactSlotShortLabel(tSlotShort, 'SANDS')}:{' '}
+                {getArtifactStatLabel(tStat, build.recommendedMainStats.SANDS)}
               </span>
             )}
             {build.recommendedMainStats.GOBLET && (
               <span className="px-2 py-0.5 rounded bg-muted text-xs text-foreground">
-                Goblet: {build.recommendedMainStats.GOBLET}
+                {getArtifactSlotShortLabel(tSlotShort, 'GOBLET')}:{' '}
+                {getArtifactStatLabel(tStat, build.recommendedMainStats.GOBLET)}
               </span>
             )}
             {build.recommendedMainStats.CIRCLET && (
               <span className="px-2 py-0.5 rounded bg-muted text-xs text-foreground">
-                Circlet: {build.recommendedMainStats.CIRCLET}
+                {getArtifactSlotShortLabel(tSlotShort, 'CIRCLET')}:{' '}
+                {getArtifactStatLabel(tStat, build.recommendedMainStats.CIRCLET)}
               </span>
             )}
           </div>
@@ -135,10 +151,13 @@ export function BuildCard({
 
         {/* Sub stat priority */}
         <div className="mb-3">
-          <div className="text-xs text-muted-foreground mb-1">Sub Stat Priority</div>
+          <div className="text-xs text-muted-foreground mb-1">{tBuildCard('subStatPriority')}</div>
           <div className="text-sm text-foreground truncate">
-            {build.subStatPriority.slice(0, 4).join(' > ')}
-            {build.subStatPriority.length > 4 && '...'}
+            {build.subStatPriority
+              .slice(0, 4)
+              .map((stat) => getArtifactStatLabel(tStat, stat))
+              .join(tBuildCard('prioritySeparator'))}
+            {build.subStatPriority.length > 4 && tBuildCard('priorityOverflow')}
           </div>
         </div>
 

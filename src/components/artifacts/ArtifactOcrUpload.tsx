@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { Upload, X, Loader2, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,8 @@ interface ArtifactOcrUploadProps {
 }
 
 export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: ArtifactOcrUploadProps) {
+  const tOcr = useTranslations('artifactOcr');
+  const tCommon = useTranslations('common');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -25,13 +28,13 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
     // Validate file type
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!allowedTypes.includes(selectedFile.type)) {
-      setError('Please upload a PNG, JPG, or WebP image');
+      setError(tOcr('errors.invalidType'));
       return;
     }
 
     // Validate file size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
+      setError(tOcr('errors.tooLarge'));
       return;
     }
 
@@ -101,7 +104,7 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
       );
       onOcrResult(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'OCR processing failed');
+      setError(err instanceof Error ? err.message : tOcr('errors.processingFailed'));
     } finally {
       setIsUploading(false);
     }
@@ -111,7 +114,7 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Camera className="h-4 w-4" />
-        <span>Upload an artifact screenshot to automatically extract stats</span>
+        <span>{tOcr('intro')}</span>
       </div>
 
       {/* Drop zone */}
@@ -131,7 +134,7 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
           <div className="relative">
             <img
               src={preview}
-              alt="Artifact screenshot preview"
+              alt={tOcr('previewAlt')}
               className="mx-auto max-h-64 rounded-lg object-contain p-2"
             />
             <button
@@ -146,9 +149,9 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 p-8">
             <Upload className="h-10 w-10 text-muted-foreground" />
             <span className="text-sm font-medium text-foreground">
-              Drop an image here or click to upload
+              {tOcr('dropzoneTitle')}
             </span>
-            <span className="text-xs text-muted-foreground">PNG, JPG, or WebP up to 10MB</span>
+            <span className="text-xs text-muted-foreground">{tOcr('dropzoneHint')}</span>
             <input
               ref={fileInputRef}
               type="file"
@@ -164,28 +167,28 @@ export function ArtifactOcrUpload({ accountId, onOcrResult, onCancel }: Artifact
 
       {/* Tips */}
       <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-        <p className="font-medium text-foreground">Tips for best results:</p>
+        <p className="font-medium text-foreground">{tOcr('tipsTitle')}</p>
         <ul className="mt-1 list-disc space-y-0.5 pl-4">
-          <li>Take a clear screenshot of the artifact details panel</li>
-          <li>Make sure all stats are visible in the image</li>
-          <li>Higher resolution images work better</li>
-          <li>Supports Chinese and English UI</li>
+          <li>{tOcr('tips.0')}</li>
+          <li>{tOcr('tips.1')}</li>
+          <li>{tOcr('tips.2')}</li>
+          <li>{tOcr('tips.3')}</li>
         </ul>
       </div>
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={handleUpload} disabled={!file || isUploading} className="flex-1">
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
+              {tOcr('processing')}
             </>
           ) : (
-            'Scan Image'
+            tOcr('scanAction')
           )}
         </Button>
       </div>

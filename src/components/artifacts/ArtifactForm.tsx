@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Minus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type {
   ArtifactSlot,
   ArtifactSet,
@@ -11,7 +11,8 @@ import type {
   CreateArtifactDto,
   UserArtifact,
 } from '@/types/artifact';
-import { SLOT_NAMES, MAIN_STATS_BY_SLOT, SUB_STATS } from '@/types/artifact';
+import { MAIN_STATS_BY_SLOT, SUB_STATS } from '@/types/artifact';
+import { getArtifactStatLabel, getArtifactSlotLabel } from '@/lib/artifactI18n';
 
 interface ArtifactFormProps {
   artifactSets: ArtifactSet[];
@@ -31,6 +32,10 @@ export function ArtifactForm({
   onCancel,
   isSubmitting = false,
 }: ArtifactFormProps) {
+  const tForm = useTranslations('artifactForm');
+  const tCommon = useTranslations('common');
+  const tStat = useTranslations('artifactStat');
+  const tSlot = useTranslations('artifactSlot');
   const [setId, setSetId] = useState(initialData?.set.id ?? '');
   const [slot, setSlot] = useState<ArtifactSlot>(initialData?.slot ?? 'FLOWER');
   const [mainStat, setMainStat] = useState(initialData?.mainStat ?? 'HP');
@@ -79,12 +84,12 @@ export function ArtifactForm({
     setError(null);
 
     if (!setId) {
-      setError('Please select an artifact set');
+      setError(tForm('errors.selectSet'));
       return;
     }
 
     if (subStats.length === 0) {
-      setError('Please add at least one sub stat');
+      setError(tForm('errors.addSubStat'));
       return;
     }
 
@@ -100,7 +105,7 @@ export function ArtifactForm({
         locked,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save artifact');
+      setError(err instanceof Error ? err.message : tForm('errors.saveFailed'));
     }
   };
 
@@ -112,14 +117,16 @@ export function ArtifactForm({
 
       {/* Artifact Set */}
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-foreground">Artifact Set</label>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
+          {tForm('setLabel')}
+        </label>
         <select
           value={setId}
           onChange={(e) => setSetId(e.target.value)}
           className="w-full rounded-lg border border-input bg-card px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           required
         >
-          <option value="">Select a set...</option>
+          <option value="">{tForm('setPlaceholder')}</option>
           {artifactSets.map((set) => (
             <option key={set.id} value={set.id}>
               {set.name}
@@ -131,7 +138,9 @@ export function ArtifactForm({
       {/* Slot and Rarity */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Slot</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {tForm('slotLabel')}
+          </label>
           <select
             value={slot}
             onChange={(e) => setSlot(e.target.value as ArtifactSlot)}
@@ -139,14 +148,16 @@ export function ArtifactForm({
           >
             {SLOTS.map((s) => (
               <option key={s} value={s}>
-                {SLOT_NAMES[s]}
+                {getArtifactSlotLabel(tSlot, s)}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Rarity</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {tForm('rarityLabel')}
+          </label>
           <select
             value={rarity}
             onChange={(e) => setRarity(Number(e.target.value))}
@@ -163,7 +174,9 @@ export function ArtifactForm({
 
       {/* Level */}
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-foreground">Level (+{level})</label>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
+          {tForm('levelLabel', { level })}
+        </label>
         <input
           type="range"
           min={0}
@@ -181,7 +194,9 @@ export function ArtifactForm({
       {/* Main Stat */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Main Stat</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {tForm('mainStatLabel')}
+          </label>
           <select
             value={mainStat}
             onChange={(e) => setMainStat(e.target.value)}
@@ -189,20 +204,23 @@ export function ArtifactForm({
           >
             {availableMainStats.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {getArtifactStatLabel(tStat, s)}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Value</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {tForm('valueLabel')}
+          </label>
           <input
             type="number"
             step="0.1"
             value={mainStatValue}
             onChange={(e) => setMainStatValue(Number(e.target.value))}
             className="w-full rounded-lg border border-input bg-card px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            placeholder={tForm('valuePlaceholder')}
             required
           />
         </div>
@@ -211,7 +229,7 @@ export function ArtifactForm({
       {/* Sub Stats */}
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label className="text-sm font-medium text-foreground">Sub Stats</label>
+          <label className="text-sm font-medium text-foreground">{tForm('subStatsLabel')}</label>
           {subStats.length < 4 && availableSubStats.length > 0 && (
             <button
               type="button"
@@ -219,7 +237,7 @@ export function ArtifactForm({
               className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
             >
               <Plus className="h-3 w-3" />
-              Add
+              {tCommon('add')}
             </button>
           )}
         </div>
@@ -232,10 +250,10 @@ export function ArtifactForm({
                 onChange={(e) => handleSubStatChange(index, 'stat', e.target.value)}
                 className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               >
-                <option value={sub.stat}>{sub.stat}</option>
+                <option value={sub.stat}>{getArtifactStatLabel(tStat, sub.stat)}</option>
                 {availableSubStats.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {getArtifactStatLabel(tStat, s)}
                   </option>
                 ))}
               </select>
@@ -245,7 +263,7 @@ export function ArtifactForm({
                 value={sub.value}
                 onChange={(e) => handleSubStatChange(index, 'value', e.target.value)}
                 className="w-24 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="Value"
+                placeholder={tForm('valuePlaceholder')}
               />
               <button
                 type="button"
@@ -260,7 +278,7 @@ export function ArtifactForm({
 
         {subStats.length === 0 && (
           <p className="mt-2 text-xs text-muted-foreground">
-            Click &quot;Add&quot; to add sub stats
+            {tForm('subStatsEmpty')}
           </p>
         )}
       </div>
@@ -275,17 +293,21 @@ export function ArtifactForm({
           className="h-4 w-4 rounded border-input accent-primary"
         />
         <label htmlFor="locked" className="text-sm text-foreground">
-          Lock this artifact
+          {tForm('lockLabel')}
         </label>
       </div>
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? 'Saving...' : initialData ? 'Update' : 'Add Artifact'}
+          {isSubmitting
+            ? tForm('saving')
+            : initialData
+              ? tForm('update')
+              : tForm('add')}
         </Button>
       </div>
     </form>

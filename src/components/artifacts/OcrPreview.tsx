@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Check, X, Plus, Minus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { AlertTriangle, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type {
@@ -11,7 +12,8 @@ import type {
   CreateArtifactDto,
   OcrUploadResponse,
 } from '@/types/artifact';
-import { SLOT_NAMES, MAIN_STATS_BY_SLOT, SUB_STATS } from '@/types/artifact';
+import { MAIN_STATS_BY_SLOT, SUB_STATS } from '@/types/artifact';
+import { getArtifactStatLabel, getArtifactSlotLabel } from '@/lib/artifactI18n';
 
 interface OcrPreviewProps {
   ocrResult: OcrUploadResponse;
@@ -33,6 +35,11 @@ export function OcrPreview({
   onRetry,
   isSubmitting = false,
 }: OcrPreviewProps) {
+  const tForm = useTranslations('artifactForm');
+  const tOcr = useTranslations('artifactOcr');
+  const tCommon = useTranslations('common');
+  const tStat = useTranslations('artifactStat');
+  const tSlot = useTranslations('artifactSlot');
   const { result, warnings } = ocrResult;
 
   // Editable form state (initialized from OCR result)
@@ -83,12 +90,12 @@ export function OcrPreview({
     setError(null);
 
     if (!setId) {
-      setError('Please select an artifact set');
+      setError(tForm('errors.selectSet'));
       return;
     }
 
     if (subStats.length === 0) {
-      setError('Please add at least one sub stat');
+      setError(tForm('errors.addSubStat'));
       return;
     }
 
@@ -104,7 +111,7 @@ export function OcrPreview({
         locked,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save artifact');
+      setError(err instanceof Error ? err.message : tForm('errors.saveFailed'));
     }
   };
 
@@ -120,13 +127,13 @@ export function OcrPreview({
       {/* Confidence indicator */}
       <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">OCR Confidence:</span>
+          <span className="text-sm font-medium">{tOcr('confidence')}</span>
           <span className={cn('text-sm font-bold', confidenceColor)}>
             {Math.round(result.overallConfidence * 100)}%
           </span>
         </div>
         <Button variant="ghost" size="sm" onClick={onRetry} className="text-xs">
-          Re-scan
+          {tOcr('rescan')}
         </Button>
       </div>
 
@@ -135,7 +142,7 @@ export function OcrPreview({
         <div className="rounded-lg bg-yellow-500/10 p-3 text-sm">
           <div className="flex items-center gap-2 font-medium text-yellow-600 dark:text-yellow-400">
             <AlertTriangle className="h-4 w-4" />
-            Please verify the following:
+            {tOcr('verify')}
           </div>
           <ul className="mt-1 list-disc space-y-0.5 pl-6 text-yellow-700 dark:text-yellow-300">
             {warnings.map((warning, i) => (
@@ -154,10 +161,10 @@ export function OcrPreview({
         {/* Artifact Set */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Artifact Set
+            {tForm('setLabel')}
             {result.setName && (
               <span className="ml-2 text-xs text-muted-foreground">
-                (Detected: {result.setName})
+                {tOcr('detected', { name: result.setName })}
               </span>
             )}
           </label>
@@ -170,7 +177,7 @@ export function OcrPreview({
             )}
             required
           >
-            <option value="">Select a set...</option>
+            <option value="">{tForm('setPlaceholder')}</option>
             {artifactSets.map((set) => (
               <option key={set.id} value={set.id}>
                 {set.name}
@@ -182,7 +189,9 @@ export function OcrPreview({
         {/* Slot and Rarity */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Slot</label>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              {tForm('slotLabel')}
+            </label>
             <select
               value={slot}
               onChange={(e) => setSlot(e.target.value as ArtifactSlot)}
@@ -193,14 +202,16 @@ export function OcrPreview({
             >
               {SLOTS.map((s) => (
                 <option key={s} value={s}>
-                  {SLOT_NAMES[s]}
+                  {getArtifactSlotLabel(tSlot, s)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Rarity</label>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              {tForm('rarityLabel')}
+            </label>
             <select
               value={rarity}
               onChange={(e) => setRarity(Number(e.target.value))}
@@ -218,7 +229,7 @@ export function OcrPreview({
         {/* Level */}
         <div>
           <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Level (+{level})
+            {tForm('levelLabel', { level })}
           </label>
           <input
             type="range"
@@ -237,7 +248,9 @@ export function OcrPreview({
         {/* Main Stat */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Main Stat</label>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              {tForm('mainStatLabel')}
+            </label>
             <select
               value={mainStat}
               onChange={(e) => setMainStat(e.target.value)}
@@ -245,20 +258,23 @@ export function OcrPreview({
             >
               {availableMainStats.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {getArtifactStatLabel(tStat, s)}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground">Value</label>
+            <label className="mb-1.5 block text-sm font-medium text-foreground">
+              {tForm('valueLabel')}
+            </label>
             <input
               type="number"
               step="0.1"
               value={mainStatValue}
               onChange={(e) => setMainStatValue(Number(e.target.value))}
               className="w-full rounded-lg border border-input bg-card px-3 py-2 text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder={tForm('valuePlaceholder')}
               required
             />
           </div>
@@ -267,7 +283,7 @@ export function OcrPreview({
         {/* Sub Stats */}
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-sm font-medium text-foreground">Sub Stats</label>
+            <label className="text-sm font-medium text-foreground">{tForm('subStatsLabel')}</label>
             {subStats.length < 4 && availableSubStats.length > 0 && (
               <button
                 type="button"
@@ -275,7 +291,7 @@ export function OcrPreview({
                 className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
               >
                 <Plus className="h-3 w-3" />
-                Add
+                {tCommon('add')}
               </button>
             )}
           </div>
@@ -288,10 +304,10 @@ export function OcrPreview({
                   onChange={(e) => handleSubStatChange(index, 'stat', e.target.value)}
                   className="flex-1 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 >
-                  <option value={sub.stat}>{sub.stat}</option>
+                  <option value={sub.stat}>{getArtifactStatLabel(tStat, sub.stat)}</option>
                   {availableSubStats.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {getArtifactStatLabel(tStat, s)}
                     </option>
                   ))}
                 </select>
@@ -301,7 +317,7 @@ export function OcrPreview({
                   value={sub.value}
                   onChange={(e) => handleSubStatChange(index, 'value', e.target.value)}
                   className="w-24 rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  placeholder="Value"
+                  placeholder={tForm('valuePlaceholder')}
                 />
                 <button
                   type="button"
@@ -315,7 +331,7 @@ export function OcrPreview({
           </div>
 
           {subStats.length === 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">Click &quot;Add&quot; to add sub stats</p>
+            <p className="mt-2 text-xs text-muted-foreground">{tForm('subStatsEmpty')}</p>
           )}
         </div>
 
@@ -328,19 +344,19 @@ export function OcrPreview({
             onChange={(e) => setLocked(e.target.checked)}
             className="h-4 w-4 rounded border-input accent-primary"
           />
-          <label htmlFor="locked" className="text-sm text-foreground">
-            Lock this artifact
-          </label>
-        </div>
+        <label htmlFor="locked" className="text-sm text-foreground">
+          {tForm('lockLabel')}
+        </label>
+      </div>
       </div>
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={handleConfirm} disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? 'Saving...' : 'Save Artifact'}
+          {isSubmitting ? tForm('saving') : tForm('save')}
         </Button>
       </div>
     </div>

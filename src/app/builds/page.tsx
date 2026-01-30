@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { useMyBuilds, useSavedBuilds, usePublicBuilds } from '@/hooks/useBuilds';
 import { useCharacters } from '@/hooks/useCharacters';
@@ -27,6 +28,8 @@ type TabType = 'my' | 'saved' | 'public';
 export default function BuildsPage() {
   const router = useRouter();
   const mounted = useMounted();
+  const tBuildsPage = useTranslations('buildsPage');
+  const tCommon = useTranslations('common');
   const { isLoggedIn, isLoading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<TabType>('public');
@@ -134,12 +137,12 @@ export default function BuildsPage() {
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {isUserMode ? 'Artifact Builds' : 'Community Builds'}
+              {isUserMode ? tBuildsPage('titleMy') : tBuildsPage('titleAll')}
             </h1>
             {isUserMode && (
               <Button onClick={() => setIsFormOpen(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
-                New Build
+                {tBuildsPage('newBuild')}
               </Button>
             )}
           </div>
@@ -151,12 +154,12 @@ export default function BuildsPage() {
         {!authLoading && !isLoggedIn && (
           <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Login to create and save your own builds
+              {tBuildsPage('loginPrompt')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                Login
+                {tBuildsPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -167,14 +170,14 @@ export default function BuildsPage() {
           <div className="mb-4 sm:mb-6 grid grid-cols-3 gap-2 sm:gap-4">
             <StatCard
               value={myTotal}
-              label="My Builds"
+              label={tBuildsPage('myBuilds')}
               icon={<Layers className="h-4 w-4" />}
               active={activeTab === 'my'}
               onClick={() => handleTabChange('my')}
             />
             <StatCard
               value={savedTotal}
-              label="Saved"
+              label={tBuildsPage('saved')}
               icon={<Heart className="h-4 w-4" />}
               variant="accent"
               active={activeTab === 'saved'}
@@ -182,7 +185,7 @@ export default function BuildsPage() {
             />
             <StatCard
               value={publicTotal}
-              label="Community"
+              label={tBuildsPage('community')}
               icon={<Globe className="h-4 w-4" />}
               active={activeTab === 'public'}
               onClick={() => handleTabChange('public')}
@@ -192,7 +195,7 @@ export default function BuildsPage() {
           <div className="mb-4 sm:mb-6">
             <StatCard
               value={publicTotal}
-              label="Community Builds"
+              label={tBuildsPage('communityBuilds')}
               icon={<Globe className="h-4 w-4" />}
               active={true}
             />
@@ -207,34 +210,34 @@ export default function BuildsPage() {
               size="sm"
               onClick={() => handleTabChange('my')}
             >
-              My Builds
+              {tBuildsPage('myBuilds')}
             </Button>
             <Button
               variant={activeTab === 'saved' ? 'default' : 'secondary'}
               size="sm"
               onClick={() => handleTabChange('saved')}
             >
-              Saved
+              {tBuildsPage('saved')}
             </Button>
             <Button
               variant={activeTab === 'public' ? 'default' : 'secondary'}
               size="sm"
               onClick={() => handleTabChange('public')}
             >
-              Community
+              {tBuildsPage('community')}
             </Button>
           </div>
         )}
 
         {/* Character filter */}
         <div className="mb-4 flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">Character:</label>
+          <label className="text-sm text-muted-foreground">{tBuildsPage('characterFilter')}</label>
           <select
             value={selectedCharacterId}
             onChange={(e) => handleCharacterFilter(e.target.value)}
             className="flex-1 sm:flex-none rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="">All Characters</option>
+            <option value="">{tBuildsPage('allCharacters')}</option>
             {characters.map((char) => (
               <option key={char.id} value={char.id}>
                 {char.name}
@@ -245,20 +248,22 @@ export default function BuildsPage() {
 
         {/* Content */}
         {isDataLoading && (
-          <div className="py-12 text-center text-muted-foreground">Loading...</div>
+          <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
         )}
 
         {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
 
         {!isDataLoading && !error && (
           <>
-            <div className="mb-4 text-sm text-muted-foreground">{total} builds</div>
+            <div className="mb-4 text-sm text-muted-foreground">
+              {tBuildsPage('totalBuilds', { count: total })}
+            </div>
 
             {items.length === 0 ? (
               <div className="py-12 text-center text-muted-foreground">
-                {activeTab === 'my' && 'No builds yet. Create your first build!'}
-                {activeTab === 'saved' && 'No saved builds. Browse community builds and save your favorites!'}
-                {activeTab === 'public' && 'No public builds available.'}
+                {activeTab === 'my' && tBuildsPage('emptyMy')}
+                {activeTab === 'saved' && tBuildsPage('emptySaved')}
+                {activeTab === 'public' && tBuildsPage('emptyPublic')}
               </div>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -283,7 +288,7 @@ export default function BuildsPage() {
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Previous</span>
+                  <span className="hidden sm:inline">{tCommon('previous')}</span>
                 </Button>
                 <span className="text-sm text-muted-foreground px-2">
                   {page} / {totalPages}
@@ -294,7 +299,7 @@ export default function BuildsPage() {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 >
-                  <span className="hidden sm:inline">Next</span>
+                  <span className="hidden sm:inline">{tCommon('next')}</span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -308,9 +313,9 @@ export default function BuildsPage() {
         <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
           <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
             <SheetHeader>
-              <SheetTitle>Create New Build</SheetTitle>
+              <SheetTitle>{tBuildsPage('createTitle')}</SheetTitle>
               <SheetDescription>
-                Create an artifact build configuration for a character.
+                {tBuildsPage('createDescription')}
               </SheetDescription>
             </SheetHeader>
             <div className="p-4">

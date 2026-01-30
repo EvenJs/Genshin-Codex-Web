@@ -1,9 +1,10 @@
 'use client';
 
 import { Lock, Unlock, User, Star, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { UserArtifact, ArtifactSlot } from '@/types/artifact';
-import { SLOT_NAMES_SHORT } from '@/types/artifact';
+import { getArtifactSlotShortLabel, getArtifactStatLabel } from '@/lib/artifactI18n';
 
 // Slot icons (using Unicode symbols for simplicity)
 const SLOT_ICONS: Record<ArtifactSlot, string> = {
@@ -46,6 +47,9 @@ export function ArtifactCard({
   onClick,
   compact = false,
 }: ArtifactCardProps) {
+  const tCard = useTranslations('artifactCard');
+  const tSlotShort = useTranslations('artifactSlotShort');
+  const tStat = useTranslations('artifactStat');
   const handleLockClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleLock?.(artifact.id, !artifact.locked);
@@ -53,7 +57,7 @@ export function ArtifactCard({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this artifact?')) {
+    if (confirm(tCard('deleteConfirm'))) {
       onDelete?.(artifact.id);
     }
   };
@@ -81,7 +85,9 @@ export function ArtifactCard({
             </span>
             <span className="text-xs text-muted-foreground">+{artifact.level}</span>
           </div>
-          <div className="text-xs text-muted-foreground truncate">{artifact.mainStat}</div>
+          <div className="text-xs text-muted-foreground truncate">
+            {getArtifactStatLabel(tStat, artifact.mainStat)}
+          </div>
         </div>
 
         {/* Lock indicator */}
@@ -108,12 +114,12 @@ export function ArtifactCard({
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{SLOT_ICONS[artifact.slot]}</span>
-          <span className="text-xs font-medium text-muted-foreground">
-            {SLOT_NAMES_SHORT[artifact.slot]}
-          </span>
-        </div>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{SLOT_ICONS[artifact.slot]}</span>
+            <span className="text-xs font-medium text-muted-foreground">
+            {getArtifactSlotShortLabel(tSlotShort, artifact.slot)}
+            </span>
+          </div>
         <div className="flex items-center gap-1">
           {/* Rarity stars */}
           {Array.from({ length: artifact.rarity }).map((_, i) => (
@@ -144,7 +150,9 @@ export function ArtifactCard({
         {/* Main stat */}
         <div className="mb-2 rounded bg-card/50 px-2 py-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{artifact.mainStat}</span>
+            <span className="text-xs text-muted-foreground">
+              {getArtifactStatLabel(tStat, artifact.mainStat)}
+            </span>
             <span className="text-sm font-semibold text-foreground">
               {formatStatValue(artifact.mainStat, artifact.mainStatValue)}
             </span>
@@ -155,7 +163,9 @@ export function ArtifactCard({
         <div className="space-y-1">
           {artifact.subStats.map((sub, index) => (
             <div key={index} className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">{sub.stat}</span>
+              <span className="text-muted-foreground">
+                {getArtifactStatLabel(tStat, sub.stat)}
+              </span>
               <span className="text-foreground">{formatStatValue(sub.stat, sub.value)}</span>
             </div>
           ))}
@@ -175,11 +185,11 @@ export function ArtifactCard({
         >
           {artifact.locked ? (
             <>
-              <Lock className="h-3 w-3" /> Locked
+              <Lock className="h-3 w-3" /> {tCard('locked')}
             </>
           ) : (
             <>
-              <Unlock className="h-3 w-3" /> Unlocked
+              <Unlock className="h-3 w-3" /> {tCard('unlocked')}
             </>
           )}
         </button>

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X, ChevronDown, ChevronUp, Trophy, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { RecommendationResult as RecommendationResultType, ScoredArtifact } from '@/types/build';
-import { SLOT_NAMES_SHORT, type ArtifactSlot } from '@/types/artifact';
+import { type ArtifactSlot } from '@/types/artifact';
+import { getArtifactSlotShortLabel, getArtifactStatLabel } from '@/lib/artifactI18n';
 
 interface RecommendationResultProps {
   result: RecommendationResultType | null;
@@ -13,6 +15,9 @@ interface RecommendationResultProps {
 }
 
 export function RecommendationResult({ result, isLoading, error }: RecommendationResultProps) {
+  const tRecommend = useTranslations('recommendations');
+  const tSlotShort = useTranslations('artifactSlotShort');
+  const tStat = useTranslations('artifactStat');
   const [expandedSlots, setExpandedSlots] = useState<Set<ArtifactSlot>>(new Set());
   const [showOptimal, setShowOptimal] = useState(true);
 
@@ -21,7 +26,7 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
       <div className="py-8 text-center">
         <div className="animate-pulse flex flex-col items-center gap-2">
           <Sparkles className="h-8 w-8 text-primary" />
-          <p className="text-muted-foreground">Analyzing your artifacts...</p>
+          <p className="text-muted-foreground">{tRecommend('analyzing')}</p>
         </div>
       </div>
     );
@@ -30,7 +35,9 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
   if (error) {
     return (
       <div className="py-8 text-center text-destructive">
-        <p>Failed to get recommendations: {error.message}</p>
+        <p>
+          {tRecommend('error')}: {error.message}
+        </p>
       </div>
     );
   }
@@ -60,9 +67,9 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
           >
             <div className="flex items-center gap-2">
               <Trophy className="h-5 w-5 text-genshin-gold" />
-              <h3 className="font-semibold text-foreground">Optimal Set</h3>
+              <h3 className="font-semibold text-foreground">{tRecommend('optimalSet')}</h3>
               <span className="px-2 py-0.5 rounded bg-genshin-gold/20 text-genshin-gold text-sm font-medium">
-                Score: {result.optimalSet.totalScore.toFixed(1)}
+                {tRecommend('score', { score: result.optimalSet.totalScore.toFixed(1) })}
               </span>
             </div>
             {showOptimal ? (
@@ -87,7 +94,7 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
 
       {/* Per-Slot Recommendations */}
       <div className="space-y-2">
-        <h3 className="font-semibold text-foreground">Recommendations by Slot</h3>
+        <h3 className="font-semibold text-foreground">{tRecommend('bySlot')}</h3>
         {result.recommendations.map((slotRec) => {
           const isExpanded = expandedSlots.has(slotRec.slot);
           const topArtifact = slotRec.artifacts[0];
@@ -104,11 +111,11 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
                 <div className="flex items-center gap-3">
                   <SlotIcon slot={slotRec.slot} />
                   <span className="font-medium text-foreground">
-                    {SLOT_NAMES_SHORT[slotRec.slot]}
+                    {getArtifactSlotShortLabel(tSlotShort, slotRec.slot)}
                   </span>
                   {topArtifact && (
                     <span className="text-sm text-muted-foreground">
-                      Top: {topArtifact.artifact.set.name}
+                      {tRecommend('top', { name: topArtifact.artifact.set.name })}
                     </span>
                   )}
                 </div>
@@ -135,7 +142,7 @@ export function RecommendationResult({ result, isLoading, error }: Recommendatio
                 <div className="border-t border-border p-3 space-y-2">
                   {slotRec.artifacts.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-2">
-                      No artifacts found for this slot
+                      {tRecommend('noneForSlot')}
                     </p>
                   ) : (
                     slotRec.artifacts.map((scored, index) => (
@@ -168,6 +175,7 @@ function SlotIcon({ slot }: { slot: ArtifactSlot }) {
 }
 
 function OptimalArtifactRow({ scored }: { scored: ScoredArtifact }) {
+  const tStat = useTranslations('artifactStat');
   return (
     <div className="flex items-center gap-3 p-2 rounded bg-card border border-border">
       <SlotIcon slot={scored.artifact.slot} />
@@ -179,7 +187,7 @@ function OptimalArtifactRow({ scored }: { scored: ScoredArtifact }) {
           <span className="text-xs text-muted-foreground">+{scored.artifact.level}</span>
         </div>
         <div className="text-xs text-muted-foreground">
-          {scored.artifact.mainStat}: {scored.artifact.mainStatValue}
+          {getArtifactStatLabel(tStat, scored.artifact.mainStat)}: {scored.artifact.mainStatValue}
           {scored.mainStatMatch ? (
             <Check className="h-3 w-3 inline ml-1 text-green-500" />
           ) : (
@@ -195,6 +203,8 @@ function OptimalArtifactRow({ scored }: { scored: ScoredArtifact }) {
 }
 
 function ArtifactRecommendationRow({ scored, rank }: { scored: ScoredArtifact; rank: number }) {
+  const tRecommend = useTranslations('recommendations');
+  const tStat = useTranslations('artifactStat');
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -224,7 +234,7 @@ function ArtifactRecommendationRow({ scored, rank }: { scored: ScoredArtifact; r
             </span>
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            {scored.artifact.mainStat}: {scored.artifact.mainStatValue}
+            {getArtifactStatLabel(tStat, scored.artifact.mainStat)}: {scored.artifact.mainStatValue}
             {scored.mainStatMatch ? (
               <Check className="h-3 w-3 text-green-500" />
             ) : (
@@ -239,11 +249,11 @@ function ArtifactRecommendationRow({ scored, rank }: { scored: ScoredArtifact; r
 
       {showDetails && (
         <div className="border-t border-border p-2 bg-card">
-          <div className="text-xs text-muted-foreground mb-1">Sub Stats:</div>
+          <div className="text-xs text-muted-foreground mb-1">{tRecommend('subStats')}</div>
           <div className="grid grid-cols-2 gap-1">
             {scored.subStatScores.map((ss) => (
               <div key={ss.stat} className="flex items-center justify-between text-xs">
-                <span className="text-foreground">{ss.stat}</span>
+                <span className="text-foreground">{getArtifactStatLabel(tStat, ss.stat)}</span>
                 <span className="text-muted-foreground">
                   {ss.value} ({ss.score.toFixed(1)})
                 </span>
@@ -252,7 +262,9 @@ function ArtifactRecommendationRow({ scored, rank }: { scored: ScoredArtifact; r
           </div>
           {scored.artifact.equippedBy && (
             <div className="mt-2 text-xs text-muted-foreground">
-              Equipped by: {scored.artifact.equippedBy.character.name}
+              {tRecommend('equippedBy', {
+                name: scored.artifact.equippedBy.character.name,
+              })}
             </div>
           )}
         </div>

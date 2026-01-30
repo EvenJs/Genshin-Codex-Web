@@ -1,9 +1,10 @@
 'use client';
 
 import { Star, User } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { AccountCharacter, Element } from '@/types/character';
-import { ELEMENT_COLORS, ELEMENT_NAMES, WEAPON_TYPE_NAMES } from '@/types/character';
+import { ELEMENT_COLORS } from '@/types/character';
 
 // Element icons (using text for simplicity, could be replaced with actual icons)
 const ELEMENT_ICONS: Record<Element, string> = {
@@ -23,9 +24,13 @@ interface CharacterCardProps {
 }
 
 export function CharacterCard({ character, onClick, compact = false }: CharacterCardProps) {
+  const tCommon = useTranslations('common');
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
+  const tDetail = useTranslations('characterDetail');
   const { character: charInfo, level, constellation } = character;
   const elementColor = ELEMENT_COLORS[charInfo.element];
-  const weaponLabel = charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : 'Unknown';
+  const weaponLabel = charInfo.weaponType ? tWeapon(charInfo.weaponType) : tCommon('unknown');
   const avatarUrl = charInfo.imageUrl;
 
   if (compact) {
@@ -131,7 +136,7 @@ export function CharacterCard({ character, onClick, compact = false }: Character
 
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                {ELEMENT_ICONS[charInfo.element]} {ELEMENT_NAMES[charInfo.element]}
+                {ELEMENT_ICONS[charInfo.element]} {tElement(charInfo.element)}
               </span>
               <span>•</span>
               <span>{weaponLabel}</span>
@@ -156,7 +161,7 @@ export function CharacterCard({ character, onClick, compact = false }: Character
 
         {/* Level */}
         <div className="mt-3 flex items-center justify-between rounded bg-muted/50 px-3 py-2">
-          <span className="text-sm text-muted-foreground">Level</span>
+          <span className="text-sm text-muted-foreground">{tDetail('level')}</span>
           <span className="text-lg font-bold text-foreground">{level}</span>
         </div>
 

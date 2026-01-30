@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useCharacters, useAccountCharacters } from '@/hooks/useCharacters';
@@ -19,7 +20,7 @@ import { CharacterForm } from '@/components/characters/CharacterForm';
 import { Search, Users, Plus, Pencil, Trash2, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Character, AccountCharacter, Element, WeaponType, CreateAccountCharacterDto, UpdateAccountCharacterDto } from '@/types/character';
-import { ELEMENT_NAMES, ELEMENT_COLORS, WEAPON_TYPE_NAMES } from '@/types/character';
+import { ELEMENT_COLORS } from '@/types/character';
 
 const ELEMENTS: Element[] = ['PYRO', 'HYDRO', 'ANEMO', 'ELECTRO', 'DENDRO', 'CRYO', 'GEO'];
 const WEAPON_TYPES: WeaponType[] = ['SWORD', 'CLAYMORE', 'POLEARM', 'BOW', 'CATALYST'];
@@ -37,6 +38,10 @@ const ELEMENT_ICONS: Record<Element, string> = {
 export default function CharactersPage() {
   const router = useRouter();
   const mounted = useMounted();
+  const tPage = useTranslations('charactersPage');
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
+  const tCommon = useTranslations('common');
   const { isLoggedIn, isLoading: authLoading, selectedAccountId, accountsLoading } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,12 +153,12 @@ export default function CharactersPage() {
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {isUserMode ? 'My Characters' : 'Characters'}
+              {isUserMode ? tPage('titleMy') : tPage('titleAll')}
             </h1>
             {isUserMode && (
               <Button onClick={() => setIsFormOpen(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
-                Add
+                {tPage('addButton')}
               </Button>
             )}
           </div>
@@ -165,12 +170,12 @@ export default function CharactersPage() {
         {!authLoading && !isLoggedIn && (
           <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Login to manage your character collection
+              {tPage('loginPrompt')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                Login
+                {tPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -180,17 +185,17 @@ export default function CharactersPage() {
         <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
           <StatCard
             value={isUserMode ? userCharacters.length : allCharacters.length}
-            label={isUserMode ? 'Total Characters' : 'All Characters'}
+            label={isUserMode ? tPage('statsTotalMy') : tPage('statsTotalAll')}
             icon={<Users className="h-4 w-4" />}
           />
           <StatCard
             value={isUserMode ? userFiveStars.length : publicFiveStars.length}
-            label="5-Star"
+            label={tPage('fiveStar')}
             variant="gold"
           />
           <StatCard
             value={isUserMode ? userFourStars.length : publicFourStars.length}
-            label="4-Star"
+            label={tPage('fourStar')}
             variant="purple"
             className="hidden sm:block"
           />
@@ -202,7 +207,7 @@ export default function CharactersPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search characters..."
+              placeholder={tPage('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-lg border border-input bg-card pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -217,7 +222,7 @@ export default function CharactersPage() {
             size="sm"
             onClick={() => setSelectedElement('')}
           >
-            All
+            {tCommon('all')}
           </Button>
           {ELEMENTS.map((element) => (
             <Button
@@ -226,7 +231,7 @@ export default function CharactersPage() {
               size="sm"
               onClick={() => setSelectedElement(element)}
             >
-              {ELEMENT_ICONS[element]} {ELEMENT_NAMES[element]}
+              {ELEMENT_ICONS[element]} {tElement(element)}
             </Button>
           ))}
         </div>
@@ -241,7 +246,7 @@ export default function CharactersPage() {
                 size="sm"
                 onClick={() => setSelectedWeapon('')}
               >
-                All Weapons
+                {tPage('allWeapons')}
               </Button>
               {WEAPON_TYPES.map((weapon) => (
                 <Button
@@ -250,7 +255,7 @@ export default function CharactersPage() {
                   size="sm"
                   onClick={() => setSelectedWeapon(weapon)}
                 >
-                  {WEAPON_TYPE_NAMES[weapon]}
+                  {tWeapon(weapon)}
                 </Button>
               ))}
             </div>
@@ -262,7 +267,7 @@ export default function CharactersPage() {
                 size="sm"
                 onClick={() => setSelectedRarity('')}
               >
-                All Rarities
+                {tPage('allRarities')}
               </Button>
               <Button
                 variant={selectedRarity === 5 ? 'default' : 'secondary'}
@@ -286,7 +291,7 @@ export default function CharactersPage() {
 
         {/* Loading */}
         {isLoading && (
-          <div className="py-12 text-center text-muted-foreground">Loading...</div>
+          <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
         )}
 
         {/* Error */}
@@ -296,7 +301,9 @@ export default function CharactersPage() {
         {!isLoading && !error && (
           <>
             <div className="mb-4 text-sm text-muted-foreground">
-              {isUserMode ? filteredUserCharacters.length : filteredPublicCharacters.length} characters
+              {tPage('charactersCount', {
+                count: isUserMode ? filteredUserCharacters.length : filteredPublicCharacters.length,
+              })}
             </div>
 
             {isUserMode ? (
@@ -305,13 +312,13 @@ export default function CharactersPage() {
                 <div className="py-12 text-center">
                   <p className="text-muted-foreground mb-4">
                     {userCharacters.length === 0
-                      ? 'No characters yet. Add your first character!'
-                      : 'No characters found'}
+                      ? tPage('emptyUser')
+                      : tPage('noCharactersFound')}
                   </p>
                   {userCharacters.length === 0 && (
                     <Button onClick={() => setIsFormOpen(true)}>
                       <Plus className="h-4 w-4 mr-1" />
-                      Add Character
+                      {tPage('addCharacter')}
                     </Button>
                   )}
                 </div>
@@ -321,7 +328,8 @@ export default function CharactersPage() {
                   {userFiveStars.length > 0 && (
                     <section>
                       <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-amber-500">★★★★★</span> 5-Star ({userFiveStars.length})
+                        <span className="text-amber-500">★★★★★</span>{' '}
+                        {tPage('sectionFiveStar', { count: userFiveStars.length })}
                       </h2>
                       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {userFiveStars.map((char) => (
@@ -331,7 +339,7 @@ export default function CharactersPage() {
                               <button
                                 onClick={(e) => handleEdit(char, e)}
                                 className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
-                                title="Edit"
+                                title={tCommon('edit')}
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -343,7 +351,7 @@ export default function CharactersPage() {
                                     ? 'bg-destructive text-destructive-foreground'
                                     : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
                                 )}
-                                title={deleteConfirm === char.id ? 'Click again to confirm' : 'Delete'}
+                                title={deleteConfirm === char.id ? tCommon('clickAgainToConfirm') : tCommon('delete')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -358,7 +366,8 @@ export default function CharactersPage() {
                   {userFourStars.length > 0 && (
                     <section>
                       <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-purple-500">★★★★</span> 4-Star ({userFourStars.length})
+                        <span className="text-purple-500">★★★★</span>{' '}
+                        {tPage('sectionFourStar', { count: userFourStars.length })}
                       </h2>
                       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {userFourStars.map((char) => (
@@ -368,7 +377,7 @@ export default function CharactersPage() {
                               <button
                                 onClick={(e) => handleEdit(char, e)}
                                 className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
-                                title="Edit"
+                                title={tCommon('edit')}
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -380,7 +389,7 @@ export default function CharactersPage() {
                                     ? 'bg-destructive text-destructive-foreground'
                                     : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
                                 )}
-                                title={deleteConfirm === char.id ? 'Click again to confirm' : 'Delete'}
+                                title={deleteConfirm === char.id ? tCommon('clickAgainToConfirm') : tCommon('delete')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -396,7 +405,7 @@ export default function CharactersPage() {
               // Public characters view
               filteredPublicCharacters.length === 0 ? (
                 <div className="py-12 text-center text-muted-foreground">
-                  No characters found
+                  {tPage('noCharactersFound')}
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -404,7 +413,8 @@ export default function CharactersPage() {
                   {publicFiveStars.length > 0 && (
                     <section>
                       <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-amber-500">★★★★★</span> 5-Star ({publicFiveStars.length})
+                        <span className="text-amber-500">★★★★★</span>{' '}
+                        {tPage('sectionFiveStar', { count: publicFiveStars.length })}
                       </h2>
                       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {publicFiveStars.map((char) => (
@@ -418,7 +428,8 @@ export default function CharactersPage() {
                   {publicFourStars.length > 0 && (
                     <section>
                       <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-purple-500">★★★★</span> 4-Star ({publicFourStars.length})
+                        <span className="text-purple-500">★★★★</span>{' '}
+                        {tPage('sectionFourStar', { count: publicFourStars.length })}
                       </h2>
                       <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                         {publicFourStars.map((char) => (
@@ -439,11 +450,9 @@ export default function CharactersPage() {
         <Sheet open={isFormOpen} onOpenChange={handleFormClose}>
           <SheetContent side="right" className="overflow-y-auto">
             <SheetHeader>
-              <SheetTitle>{editingCharacter ? 'Edit Character' : 'Add Character'}</SheetTitle>
+              <SheetTitle>{editingCharacter ? tPage('editTitle') : tPage('addTitle')}</SheetTitle>
               <SheetDescription>
-                {editingCharacter
-                  ? 'Update character level and constellation.'
-                  : 'Select a character and set their level and constellation.'}
+                {editingCharacter ? tPage('editDescription') : tPage('addDescription')}
               </SheetDescription>
             </SheetHeader>
             <div className="p-4">
@@ -468,6 +477,9 @@ interface PublicCharacterCardProps {
 }
 
 function PublicCharacterCard({ character }: PublicCharacterCardProps) {
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
+  const tCommon = useTranslations('common');
   const elementColor = ELEMENT_COLORS[character.element];
   const avatarUrl = character.imageUrl;
 
@@ -497,7 +509,8 @@ function PublicCharacterCard({ character }: PublicCharacterCardProps) {
           {character.name}
         </h3>
         <div className="mt-1 text-center text-xs text-muted-foreground">
-          {ELEMENT_NAMES[character.element]} · {character.weaponType ? WEAPON_TYPE_NAMES[character.weaponType] : 'Unknown'}
+          {tElement(character.element)} ·{' '}
+          {character.weaponType ? tWeapon(character.weaponType) : tCommon('unknown')}
         </div>
         {character.rarity && (
           <div className="mt-1 flex justify-center">

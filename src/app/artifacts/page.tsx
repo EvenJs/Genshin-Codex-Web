@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { useArtifacts, useArtifactStats, useArtifactSets } from '@/hooks/useArtifacts';
 import { useMounted } from '@/hooks/useMounted';
@@ -21,12 +22,16 @@ import { OcrPreview } from '@/components/artifacts/OcrPreview';
 import { ChevronLeft, ChevronRight, Plus, Package, Camera, PenLine, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ArtifactSlot, CreateArtifactDto, OcrUploadResponse } from '@/types/artifact';
-import { SLOT_NAMES_SHORT } from '@/types/artifact';
+import { getArtifactSlotShortLabel } from '@/lib/artifactI18n';
 
 type InputMode = 'manual' | 'ocr' | 'ocr-preview';
 
 export default function ArtifactsPage() {
   const mounted = useMounted();
+  const tArtifactsPage = useTranslations('artifactsPage');
+  const tArtifacts = useTranslations('artifacts');
+  const tCommon = useTranslations('common');
+  const tArtifactSlotShort = useTranslations('artifactSlotShort');
   const { isLoggedIn, isLoading: authLoading, selectedAccountId, accountsLoading } = useAuth();
 
   const [page, setPage] = useState(1);
@@ -91,12 +96,12 @@ export default function ArtifactsPage() {
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-              {isUserMode ? 'My Artifacts' : 'Artifacts'}
+              {isUserMode ? tArtifactsPage('titleMy') : tArtifactsPage('titleAll')}
             </h1>
             {isUserMode && (
               <Button onClick={() => setIsFormOpen(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
-                Add
+                {tCommon('add')}
               </Button>
             )}
           </div>
@@ -107,12 +112,12 @@ export default function ArtifactsPage() {
         {!authLoading && !isLoggedIn && (
           <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Login to add, organize, and track your personal artifacts
+              {tArtifactsPage('loginPrompt')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                Login
+                {tArtifactsPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -123,18 +128,18 @@ export default function ArtifactsPage() {
           <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
             <StatCard
               value={stats.totalCount}
-              label="Total Artifacts"
+              label={tArtifacts('totalArtifacts')}
               icon={<Package className="h-4 w-4" />}
             />
-            <StatCard value={stats.equippedCount} label="Equipped" variant="accent" />
+            <StatCard value={stats.equippedCount} label={tArtifacts('equipped')} variant="accent" />
             <StatCard
               value={stats.unequippedCount}
-              label="Unequipped"
+              label={tArtifacts('unequipped')}
               className="hidden sm:block"
             />
             <StatCard
               value={stats.byRarity[5] ?? 0}
-              label="5-Star"
+              label={tArtifactsPage('fiveStar')}
               variant="gold"
               className="hidden sm:block"
             />
@@ -152,7 +157,7 @@ export default function ArtifactsPage() {
                 handleFilterChange();
               }}
             >
-              All
+              {tCommon('all')}
             </Button>
             {(['FLOWER', 'PLUME', 'SANDS', 'GOBLET', 'CIRCLET'] as ArtifactSlot[]).map((slot) => (
               <Button
@@ -164,7 +169,7 @@ export default function ArtifactsPage() {
                   handleFilterChange();
                 }}
               >
-                {SLOT_NAMES_SHORT[slot]}
+                {getArtifactSlotShortLabel(tArtifactSlotShort, slot)}
               </Button>
             ))}
           </div>
@@ -201,20 +206,22 @@ export default function ArtifactsPage() {
 
         {/* List */}
         {isLoading && (
-          <div className="py-12 text-center text-muted-foreground">Loading...</div>
+          <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
         )}
 
         {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
 
         {!isLoading && !error && isUserMode && (
           <>
-            <div className="mb-4 text-sm text-muted-foreground">{total} artifacts</div>
+            <div className="mb-4 text-sm text-muted-foreground">
+              {tArtifactsPage('totalArtifacts', { count: total })}
+            </div>
 
             <ArtifactList
               artifacts={artifacts}
               onToggleLock={toggleLock}
               onDelete={deleteArtifact}
-              emptyMessage="No artifacts found. Add your first artifact!"
+              emptyMessage={tArtifactsPage('emptyMessage')}
             />
 
             {/* Pagination */}
@@ -227,7 +234,7 @@ export default function ArtifactsPage() {
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Previous</span>
+                  <span className="hidden sm:inline">{tCommon('previous')}</span>
                 </Button>
                 <span className="text-sm text-muted-foreground px-2">
                   {page} / {totalPages}
@@ -238,7 +245,7 @@ export default function ArtifactsPage() {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 >
-                  <span className="hidden sm:inline">Next</span>
+                  <span className="hidden sm:inline">{tCommon('next')}</span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -249,7 +256,7 @@ export default function ArtifactsPage() {
         {!isLoading && !error && !isUserMode && (
           <>
             <div className="mb-4 text-sm text-muted-foreground">
-              {artifactSets.length} artifact sets
+              {tArtifactsPage('setsCount', { count: artifactSets.length })}
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {artifactSets.map((set) => (
@@ -274,17 +281,17 @@ export default function ArtifactsPage() {
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-foreground">{set.name}</h3>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        Rarity: {set.rarity.join('/')}
+                        {tArtifactsPage('rarityLabel')}: {set.rarity.join('/')}
                       </div>
                     </div>
                   </div>
                   <div className="mt-3 text-sm text-foreground">
-                    <div className="font-medium">2-Piece</div>
+                    <div className="font-medium">{tArtifactsPage('twoPiece')}</div>
                     <p className="text-muted-foreground">{set.twoPieceBonus}</p>
                   </div>
                   {set.fourPieceBonus && (
                     <div className="mt-3 text-sm text-foreground">
-                      <div className="font-medium">4-Piece</div>
+                      <div className="font-medium">{tArtifactsPage('fourPiece')}</div>
                       <p className="text-muted-foreground">{set.fourPieceBonus}</p>
                     </div>
                   )}
@@ -309,13 +316,13 @@ export default function ArtifactsPage() {
         >
           <SheetContent side="right" className="overflow-y-auto">
             <SheetHeader>
-              <SheetTitle>Add Artifact</SheetTitle>
+              <SheetTitle>{tArtifacts('addArtifact')}</SheetTitle>
               <SheetDescription>
                 {inputMode === 'manual'
-                  ? 'Manually enter your artifact details.'
+                  ? tArtifacts('manualDescription')
                   : inputMode === 'ocr'
-                    ? 'Upload a screenshot to scan artifact stats.'
-                    : 'Review and confirm the scanned artifact data.'}
+                    ? tArtifacts('scanDescription')
+                    : tArtifacts('reviewDescription')}
               </SheetDescription>
             </SheetHeader>
 
@@ -332,7 +339,7 @@ export default function ArtifactsPage() {
                   )}
                 >
                   <PenLine className="h-4 w-4" />
-                  Manual
+                  {tArtifacts('manual')}
                 </button>
                 <button
                   onClick={() => setInputMode('ocr')}
@@ -344,7 +351,7 @@ export default function ArtifactsPage() {
                   )}
                 >
                   <Camera className="h-4 w-4" />
-                  Scan
+                  {tArtifacts('scan')}
                 </button>
               </div>
             )}

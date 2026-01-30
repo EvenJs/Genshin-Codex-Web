@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { AddAccountForm } from './AddAccountForm';
 import type { Account } from '@/types/account';
 
@@ -23,6 +24,9 @@ export function AccountDropdown({
   onAddAccount,
   onDeleteAccount,
 }: AccountDropdownProps) {
+  const tAccount = useTranslations('account');
+  const tServer = useTranslations('server');
+  const tCommon = useTranslations('common');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -47,7 +51,7 @@ export function AccountDropdown({
 
   const handleDeleteAccount = async (e: React.MouseEvent, accountId: string) => {
     e.stopPropagation();
-    if (!confirm('确定删除此账号？')) return;
+    if (!confirm(tAccount('deleteConfirm'))) return;
 
     setDeletingId(accountId);
     try {
@@ -69,7 +73,7 @@ export function AccountDropdown({
         onClick={() => setDropdownOpen(!dropdownOpen)}
         className="flex items-center gap-1 text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
-        <span>{selectedAccount?.nickname || selectedAccount?.uid || '选择账号'}</span>
+        <span>{selectedAccount?.nickname || selectedAccount?.uid || tAccount('selectAccount')}</span>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -78,13 +82,13 @@ export function AccountDropdown({
       {dropdownOpen && (
         <div className="absolute right-0 mt-2 w-72 rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800 z-50">
           {accountsLoading ? (
-            <div className="p-4 text-sm text-zinc-500">加载中...</div>
+            <div className="p-4 text-sm text-zinc-500">{tCommon('loading')}</div>
           ) : (
             <>
               {/* Account list */}
               <div className="max-h-48 overflow-y-auto">
                 {accounts.length === 0 ? (
-                  <div className="p-4 text-sm text-zinc-500">暂无账号</div>
+                  <div className="p-4 text-sm text-zinc-500">{tAccount('noAccounts')}</div>
                 ) : (
                   accounts.map((account) => (
                     <div
@@ -99,7 +103,7 @@ export function AccountDropdown({
                           {account.nickname || account.uid}
                         </div>
                         <div className="text-xs text-zinc-500 truncate">
-                          {account.uid} · {account.server}
+                          {account.uid} · {tServer(account.server)}
                         </div>
                       </div>
                       <button
@@ -107,7 +111,7 @@ export function AccountDropdown({
                         disabled={deletingId === account.id}
                         className="ml-2 text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
                       >
-                        {deletingId === account.id ? '...' : '删除'}
+                        {deletingId === account.id ? '...' : tCommon('delete')}
                       </button>
                     </div>
                   ))
@@ -125,7 +129,7 @@ export function AccountDropdown({
                   onClick={() => setShowAddForm(true)}
                   className="w-full px-4 py-2 text-left text-sm text-blue-600 hover:bg-zinc-100 dark:text-blue-400 dark:hover:bg-zinc-700"
                 >
-                  + 添加账号
+                  + {tAccount('addAccount')}
                 </button>
               )}
             </>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 import { locales, localeNames, type Locale } from '@/i18n/config';
 import { Languages } from 'lucide-react';
 
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;
+  const tLayout = useTranslations('layout');
   const [isPending, startTransition] = useTransition();
 
   const handleChange = (newLocale: Locale) => {
@@ -25,7 +26,7 @@ export function LanguageSwitcher() {
       onClick={() => handleChange(nextLocale)}
       disabled={isPending}
       className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors disabled:opacity-50"
-      title={`Switch to ${localeNames[nextLocale]}`}
+      title={tLayout('switchTo', { locale: localeNames[nextLocale] })}
     >
       <Languages className="h-4 w-4" />
       <span className="hidden sm:inline">{localeNames[locale]}</span>

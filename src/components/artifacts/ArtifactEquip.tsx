@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,7 @@ import {
 import { ArtifactCard } from './ArtifactCard';
 import { cn } from '@/lib/utils';
 import type { UserArtifact, ArtifactSlot } from '@/types/artifact';
-import { SLOT_NAMES, SLOT_NAMES_SHORT } from '@/types/artifact';
+import { getArtifactSlotLabel, getArtifactSlotShortLabel } from '@/lib/artifactI18n';
 
 // Slot icons
 const SLOT_ICONS: Record<ArtifactSlot, string> = {
@@ -43,6 +44,9 @@ export function ArtifactEquip({
   onUnequip,
   isLoading = false,
 }: ArtifactEquipProps) {
+  const tEquip = useTranslations('artifactEquip');
+  const tSlot = useTranslations('artifactSlot');
+  const tSlotShort = useTranslations('artifactSlotShort');
   const [selectedSlot, setSelectedSlot] = useState<ArtifactSlot | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -98,7 +102,9 @@ export function ArtifactEquip({
       {/* Set Bonuses */}
       {activeBonuses.length > 0 && (
         <div className="rounded-lg border border-border bg-card p-3">
-          <h3 className="mb-2 text-sm font-medium text-foreground">Active Set Bonuses</h3>
+          <h3 className="mb-2 text-sm font-medium text-foreground">
+            {tEquip('activeBonuses')}
+          </h3>
           <div className="space-y-1">
             {activeBonuses.map((bonus) => (
               <div key={bonus.name} className="flex items-center gap-2 text-sm">
@@ -150,7 +156,7 @@ export function ArtifactEquip({
             >
               <span className="text-lg sm:text-2xl mb-1">{SLOT_ICONS[slot]}</span>
               <span className="text-[10px] sm:text-xs text-muted-foreground">
-                {SLOT_NAMES_SHORT[slot]}
+                {getArtifactSlotShortLabel(tSlotShort, slot)}
               </span>
               {equipped && (
                 <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
@@ -189,10 +195,12 @@ export function ArtifactEquip({
         <SheetContent side="right" className="overflow-y-auto">
           <SheetHeader>
             <SheetTitle>
-              Select {selectedSlot && SLOT_NAMES[selectedSlot]}
+              {tEquip('selectSlot', {
+                slot: selectedSlot ? getArtifactSlotLabel(tSlot, selectedSlot) : '',
+              })}
             </SheetTitle>
             <SheetDescription>
-              Choose an artifact to equip on {characterName}
+              {tEquip('selectSlotDesc', { character: characterName })}
             </SheetDescription>
           </SheetHeader>
 
@@ -200,7 +208,9 @@ export function ArtifactEquip({
             {/* Currently equipped */}
             {selectedSlot && getEquippedBySlot(selectedSlot) && (
               <div className="mb-4">
-                <h4 className="mb-2 text-sm font-medium text-foreground">Currently Equipped</h4>
+                <h4 className="mb-2 text-sm font-medium text-foreground">
+                  {tEquip('currentlyEquipped')}
+                </h4>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
                     <ArtifactCard artifact={getEquippedBySlot(selectedSlot)!} compact />
@@ -211,7 +221,7 @@ export function ArtifactEquip({
                     onClick={() => handleUnequip(getEquippedBySlot(selectedSlot)!.id)}
                     disabled={isSubmitting}
                   >
-                    Unequip
+                    {tEquip('unequip')}
                   </Button>
                 </div>
               </div>
@@ -219,12 +229,14 @@ export function ArtifactEquip({
 
             {/* Available artifacts */}
             <h4 className="text-sm font-medium text-foreground">
-              Available ({availableForSlot.length})
+              {tEquip('availableCount', { count: availableForSlot.length })}
             </h4>
 
             {availableForSlot.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                No unequipped {selectedSlot && SLOT_NAMES_SHORT[selectedSlot].toLowerCase()}s available
+                {tEquip('noAvailable', {
+                  slot: selectedSlot ? getArtifactSlotShortLabel(tSlotShort, selectedSlot) : '',
+                })}
               </p>
             ) : (
               <div className="space-y-2">
@@ -238,7 +250,7 @@ export function ArtifactEquip({
                       onClick={() => handleEquip(artifact.id)}
                       disabled={isSubmitting}
                     >
-                      Equip
+                      {tEquip('equip')}
                     </Button>
                   </div>
                 ))}

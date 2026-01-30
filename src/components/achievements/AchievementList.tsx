@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import type { Achievement } from '@/types/achievement';
 import { Star } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export interface AchievementListProps {
   items: Achievement[];
 }
 
 export function AchievementList({ items }: AchievementListProps) {
+  const t = useTranslations('achievements');
   if (items.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">No achievements found.</p>;
+    return <p className="text-center text-muted-foreground py-8">{t('noAchievements')}</p>;
   }
 
   return (

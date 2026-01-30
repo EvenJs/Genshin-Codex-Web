@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicAchievements, useUserAchievements } from '@/hooks/useAchievements';
 import { useMounted } from '@/hooks/useMounted';
@@ -15,6 +16,9 @@ type StatusFilter = 'all' | 'incomplete' | 'completed';
 
 export default function AchievementsPage() {
   const mounted = useMounted();
+  const tPage = useTranslations('achievementsPage');
+  const tCommon = useTranslations('common');
+  const tAchievements = useTranslations('achievements');
   const { isLoggedIn, isLoading: authLoading, selectedAccountId, accountsLoading } = useAuth();
 
   const [page, setPage] = useState(1);
@@ -134,12 +138,12 @@ export default function AchievementsPage() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-            {isUserMode ? 'My Achievements' : 'Achievements'}
+            {isUserMode ? tPage('titleMy') : tPage('titleAll')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isUserMode
-              ? 'Track your achievement progress'
-              : 'Browse all achievements'}
+              ? tPage('subtitleMy')
+              : tPage('subtitleAll')}
           </p>
         </div>
       </header>
@@ -149,12 +153,12 @@ export default function AchievementsPage() {
         {!authLoading && !isLoggedIn && (
           <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Login to track your achievement progress
+              {tPage('loginPrompt')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                Login
+                {tPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -163,23 +167,23 @@ export default function AchievementsPage() {
         {/* Stats (only for logged in users) */}
         {isUserMode && stats && (
           <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-5">
-            <StatCard value={stats.completedCount} label="Completed" variant="success" />
-            <StatCard value={stats.incompleteCount} label="Incomplete" variant="default" />
+            <StatCard value={stats.completedCount} label={tAchievements('completed')} variant="success" />
+            <StatCard value={stats.incompleteCount} label={tAchievements('incomplete')} variant="default" />
             <StatCard
               value={stats.totalCount}
-              label="Total"
+              label={tAchievements('total')}
               variant="default"
               className="hidden sm:block"
             />
             <StatCard
               value={stats.primogemsEarned}
-              label="Earned"
+              label={tAchievements('earned')}
               variant="gold"
               icon={<Star className="h-4 w-4 fill-current" />}
             />
             <StatCard
               value={stats.primogemsTotal}
-              label="Total"
+              label={tAchievements('total')}
               variant="gold"
               icon={<Star className="h-4 w-4 fill-current opacity-50" />}
               className="hidden sm:block"
@@ -201,7 +205,11 @@ export default function AchievementsPage() {
                   status === s && 'bg-primary text-primary-foreground'
                 )}
               >
-                {s === 'all' ? 'All' : s === 'incomplete' ? 'Incomplete' : 'Completed'}
+                {s === 'all'
+                  ? tPage('statusAll')
+                  : s === 'incomplete'
+                    ? tPage('statusIncomplete')
+                    : tPage('statusCompleted')}
               </Button>
             ))}
           </div>
@@ -213,7 +221,7 @@ export default function AchievementsPage() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search achievements..."
+              placeholder={tAchievements('searchPlaceholder')}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full rounded-lg border border-input bg-card pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -237,7 +245,7 @@ export default function AchievementsPage() {
 
         {/* Results */}
         {isLoading && (
-          <div className="py-12 text-center text-muted-foreground">Loading...</div>
+          <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
         )}
 
         {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
@@ -245,11 +253,11 @@ export default function AchievementsPage() {
         {!isLoading && !error && (
           <>
             <div className="mb-4 text-sm text-muted-foreground">
-              {total} achievements{isUserMode ? '' : ' found'}
+              {tPage('countLabel', { count: total })}
             </div>
 
             {(isUserMode ? filteredUserItems.length : publicItems.length) === 0 ? (
-              <div className="py-12 text-center text-muted-foreground">No achievements found</div>
+              <div className="py-12 text-center text-muted-foreground">{tAchievements('noAchievements')}</div>
             ) : isUserMode ? (
               // User achievements list with completion toggle
               <ul className="space-y-2 sm:space-y-3">
@@ -286,7 +294,7 @@ export default function AchievementsPage() {
                         </h3>
                         {item.completed && (
                           <span className="rounded bg-primary/10 px-1.5 py-0.5 text-xs text-primary font-medium">
-                            Done
+                            {tAchievements('done')}
                           </span>
                         )}
                       </div>
@@ -316,7 +324,7 @@ export default function AchievementsPage() {
                   disabled={page === 1}
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Previous</span>
+                  <span className="hidden sm:inline">{tCommon('previous')}</span>
                 </Button>
                 <span className="text-sm text-muted-foreground px-2">
                   {page} / {totalPages}
@@ -327,7 +335,7 @@ export default function AchievementsPage() {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
                 >
-                  <span className="hidden sm:inline">Next</span>
+                  <span className="hidden sm:inline">{tCommon('next')}</span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>

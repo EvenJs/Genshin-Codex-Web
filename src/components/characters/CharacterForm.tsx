@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type {
@@ -10,7 +11,7 @@ import type {
   UpdateAccountCharacterDto,
   Element,
 } from '@/types/character';
-import { ELEMENT_NAMES, ELEMENT_COLORS, WEAPON_TYPE_NAMES } from '@/types/character';
+import { ELEMENT_COLORS } from '@/types/character';
 
 const ELEMENT_ICONS: Record<Element, string> = {
   PYRO: '🔥',
@@ -39,6 +40,10 @@ export function CharacterForm({
   onCancel,
   isSubmitting = false,
 }: CharacterFormProps) {
+  const tForm = useTranslations('characterForm');
+  const tCommon = useTranslations('common');
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
   const isEditing = !!initialData;
 
   const [characterId, setCharacterId] = useState(initialData?.character.id ?? '');
@@ -98,12 +103,14 @@ export function CharacterForm({
       {/* Character Selection (only for new) */}
       {!isEditing && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">Character</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {tForm('labelCharacter')}
+          </label>
 
           {/* Search */}
           <input
             type="text"
-            placeholder="Search characters..."
+            placeholder={tForm('searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="mb-2 w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -113,7 +120,7 @@ export function CharacterForm({
           <div className="max-h-60 overflow-y-auto rounded-lg border border-input bg-card p-2">
             {sortedCharacters.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                {searchQuery ? 'No characters found' : 'All characters already added'}
+                {searchQuery ? tForm('noCharactersFound') : tForm('allCharactersAdded')}
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-1">
@@ -189,10 +196,10 @@ export function CharacterForm({
             <div>
               <div className="font-medium text-foreground">{selectedCharacter.name}</div>
               <div className="text-xs text-muted-foreground">
-                {ELEMENT_NAMES[selectedCharacter.element]} ·{' '}
+                {tElement(selectedCharacter.element)} ·{' '}
                 {selectedCharacter.weaponType
-                  ? WEAPON_TYPE_NAMES[selectedCharacter.weaponType]
-                  : 'Unknown'}
+                  ? tWeapon(selectedCharacter.weaponType)
+                  : tCommon('unknown')}
               </div>
             </div>
           </div>
@@ -202,7 +209,7 @@ export function CharacterForm({
       {/* Level */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Level: {level}
+          {tForm('levelLabel')}: {level}
         </label>
         <input
           type="range"
@@ -221,7 +228,7 @@ export function CharacterForm({
       {/* Constellation */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-foreground">
-          Constellation: C{constellation}
+          {tForm('constellationLabel')}: C{constellation}
         </label>
         <div className="flex gap-1">
           {[0, 1, 2, 3, 4, 5, 6].map((c) => (
@@ -245,14 +252,14 @@ export function CharacterForm({
       {/* Actions */}
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {tForm('cancel')}
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting || (!isEditing && !characterId)}
           className="flex-1"
         >
-          {isSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Add Character'}
+          {isSubmitting ? tForm('saving') : isEditing ? tForm('update') : tForm('addCharacter')}
         </Button>
       </div>
     </form>

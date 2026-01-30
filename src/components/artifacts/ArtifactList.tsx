@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ArtifactCard } from './ArtifactCard';
 import type { UserArtifact } from '@/types/artifact';
 
@@ -18,12 +19,14 @@ export function ArtifactList({
   onDelete,
   onClick,
   compact = false,
-  emptyMessage = 'No artifacts found',
+  emptyMessage,
 }: ArtifactListProps) {
+  const tArtifactsPage = useTranslations('artifactsPage');
+  const resolvedEmptyMessage = emptyMessage ?? tArtifactsPage('emptyMessage');
   if (artifacts.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        {emptyMessage}
+        {resolvedEmptyMessage}
       </div>
     );
   }

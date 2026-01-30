@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { apiFetch } from '@/lib/apiClient';
 import type { Achievement } from '@/types/achievement';
@@ -9,6 +10,7 @@ import type { Achievement } from '@/types/achievement';
 export default function AchievementDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const t = useTranslations('achievementDetail');
 
   const [achievement, setAchievement] = useState<Achievement | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,7 @@ export default function AchievementDetailPage() {
         const data = await apiFetch<Achievement>(`/achievements/${id}`);
         setAchievement(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '加载失败');
+        setError(err instanceof Error ? err.message : t('loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -39,15 +41,15 @@ export default function AchievementDetailPage() {
       <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
         <div className="mx-auto max-w-5xl px-4 py-6">
           <Link href="/" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
-            ← 返回成就列表
+            ← {t('back')}
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">成就详情</h1>
+          <h1 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{t('title')}</h1>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
         {loading && (
-          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">加载中...</div>
+          <div className="py-12 text-center text-zinc-500 dark:text-zinc-400">{t('loading')}</div>
         )}
 
         {error && <div className="py-12 text-center text-red-500">{error}</div>}
@@ -63,7 +65,7 @@ export default function AchievementDetailPage() {
                   </h2>
                   {achievement.isHidden && (
                     <span className="rounded bg-zinc-200 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
-                      隐藏成就
+                      {t('hidden')}
                     </span>
                   )}
                 </div>
@@ -71,21 +73,21 @@ export default function AchievementDetailPage() {
               </div>
               <div className="flex items-center gap-1 text-amber-500">
                 <span className="text-lg font-semibold">{achievement.rewardPrimogems}</span>
-                <span className="text-sm">原石</span>
+                <span className="text-sm">{t('primogems')}</span>
               </div>
             </div>
 
             {/* 元信息 */}
             <div className="mt-6 flex flex-wrap gap-4 border-t border-zinc-200 pt-4 dark:border-zinc-700">
               <div>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">分类: </span>
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">{t('category')}: </span>
                 <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                   {achievement.category}
                 </span>
               </div>
               {achievement.region && (
                 <div>
-                  <span className="text-sm text-zinc-500 dark:text-zinc-400">地区: </span>
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400">{t('region')}: </span>
                   <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                     {achievement.region}
                   </span>
@@ -96,7 +98,7 @@ export default function AchievementDetailPage() {
             {/* 攻略指南 */}
             {achievement.guide && (
               <div className="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                <h3 className="mb-3 font-medium text-zinc-900 dark:text-zinc-100">攻略指南</h3>
+                <h3 className="mb-3 font-medium text-zinc-900 dark:text-zinc-100">{t('guide')}</h3>
                 <div className="whitespace-pre-wrap rounded-lg bg-zinc-50 p-4 text-sm text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
                   {achievement.guide}
                 </div>

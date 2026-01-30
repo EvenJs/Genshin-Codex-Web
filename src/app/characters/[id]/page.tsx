@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useMounted } from '@/hooks/useMounted';
@@ -12,7 +13,7 @@ import { ArtifactEquip } from '@/components/artifacts/ArtifactEquip';
 import { ArrowLeft, Star, LogIn, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AccountCharacter, Character, Element } from '@/types/character';
-import { ELEMENT_COLORS, ELEMENT_NAMES, WEAPON_TYPE_NAMES } from '@/types/character';
+import { ELEMENT_COLORS } from '@/types/character';
 
 const ELEMENT_ICONS: Record<Element, string> = {
   PYRO: '🔥',
@@ -28,6 +29,10 @@ export default function CharacterDetailPage() {
   const params = useParams();
   const router = useRouter();
   const mounted = useMounted();
+  const tDetail = useTranslations('characterDetail');
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
+  const tNav = useTranslations('nav');
   const characterId = params.id as string;
 
   const { isLoggedIn, isLoading: authLoading, selectedAccountId } = useAuth();
@@ -122,7 +127,7 @@ export default function CharacterDetailPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="py-12 text-center text-muted-foreground">Loading...</div>
+        <div className="py-12 text-center text-muted-foreground">{tDetail('loading')}</div>
       </div>
     );
   }
@@ -132,10 +137,10 @@ export default function CharacterDetailPage() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-4xl px-4 py-12">
           <div className="text-center">
-            <p className="text-destructive mb-4">{error || 'Character not found'}</p>
+            <p className="text-destructive mb-4">{error || tDetail('notFound')}</p>
             <Button onClick={() => router.push('/characters')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Characters
+              {tDetail('backToCharacters')}
             </Button>
           </div>
         </div>
@@ -155,15 +160,15 @@ export default function CharacterDetailPage() {
         style={{ backgroundColor: `${elementColor}10` }}
       >
         <div className="mx-auto max-w-4xl px-4 py-4 sm:py-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/characters')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push('/characters')}
+              className="mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              {tDetail('back')}
+            </Button>
 
           <div className="flex items-start gap-4">
             {/* Avatar */}
@@ -199,19 +204,19 @@ export default function CharacterDetailPage() {
                 )}
               </div>
 
-              <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1">
-                  {charInfo.element ? ELEMENT_ICONS[charInfo.element] : '❔'}{' '}
-                  {charInfo.element ? ELEMENT_NAMES[charInfo.element] : 'Unknown'}
-                </span>
-                <span>•</span>
-                <span>
-                  {charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : 'Unknown'}
-                </span>
-                {charInfo.region && (
-                  <>
-                    <span>•</span>
-                    <span>{charInfo.region}</span>
+            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              <span className="flex items-center gap-1">
+                {charInfo.element ? ELEMENT_ICONS[charInfo.element] : '❔'}{' '}
+                {charInfo.element ? tElement(charInfo.element) : tDetail('unknown')}
+              </span>
+              <span>•</span>
+              <span>
+                {charInfo.weaponType ? tWeapon(charInfo.weaponType) : tDetail('unknown')}
+              </span>
+              {charInfo.region && (
+                <>
+                  <span>•</span>
+                  <span>{charInfo.region}</span>
                   </>
                 )}
               </div>
@@ -233,7 +238,7 @@ export default function CharacterDetailPage() {
                 )}
                 {owned && accountCharacter && (
                   <span className="text-lg font-semibold text-foreground">
-                    Lv. {accountCharacter.level}
+                    {tDetail('level')} {accountCharacter.level}
                   </span>
                 )}
               </div>
@@ -247,12 +252,12 @@ export default function CharacterDetailPage() {
         {!isLoggedIn && (
           <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              登录后可管理角色等级、命座与装备
+              {tDetail('loginToManage')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                登录
+                {tNav('login')}
               </Button>
             </Link>
           </div>
@@ -261,21 +266,21 @@ export default function CharacterDetailPage() {
         {/* Detail Section */}
         <section className="mb-6 grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-2 text-base font-semibold text-foreground">基础信息</h2>
+            <h2 className="mb-2 text-base font-semibold text-foreground">{tDetail('baseInfo')}</h2>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <div>所属：{charInfo.affiliation ?? '未知'}</div>
-              <div>神之眼所属：{charInfo.visionAffiliation ?? '未知'}</div>
-              <div>定位：{charInfo.role ?? '未知'}</div>
+              <div>{tDetail('affiliation')}：{charInfo.affiliation ?? tDetail('unknown')}</div>
+              <div>{tDetail('visionAffiliation')}：{charInfo.visionAffiliation ?? tDetail('unknown')}</div>
+              <div>{tDetail('role')}：{charInfo.role ?? tDetail('unknown')}</div>
             </div>
           </div>
           <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-2 text-base font-semibold text-foreground">元素与武器</h2>
+            <h2 className="mb-2 text-base font-semibold text-foreground">{tDetail('elementWeapon')}</h2>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <div>元素：{charInfo.element ? ELEMENT_NAMES[charInfo.element] : '未知'}</div>
+              <div>{tDetail('element')}：{charInfo.element ? tElement(charInfo.element) : tDetail('unknown')}</div>
               <div>
-                武器类型：{charInfo.weaponType ? WEAPON_TYPE_NAMES[charInfo.weaponType] : '未知'}
+                {tDetail('weaponType')}：{charInfo.weaponType ? tWeapon(charInfo.weaponType) : tDetail('unknown')}
               </div>
-              <div>地区：{charInfo.region ?? '未知'}</div>
+              <div>{tDetail('region')}：{charInfo.region ?? tDetail('unknown')}</div>
             </div>
           </div>
         </section>
@@ -283,7 +288,7 @@ export default function CharacterDetailPage() {
         {/* Talents */}
         {charInfo.talents && (
           <section className="mb-6">
-            <h2 className="mb-3 text-lg font-semibold text-foreground">天赋</h2>
+            <h2 className="mb-3 text-lg font-semibold text-foreground">{tDetail('talents')}</h2>
             <div className="space-y-3">
               {Object.entries(charInfo.talents).map(([title, content]) => (
                 <div key={title} className="rounded-lg border border-border bg-card p-4">
@@ -300,7 +305,7 @@ export default function CharacterDetailPage() {
         {/* Constellations */}
         {charInfo.constellations && (
           <section className="mb-6">
-            <h2 className="mb-3 text-lg font-semibold text-foreground">命之座</h2>
+            <h2 className="mb-3 text-lg font-semibold text-foreground">{tDetail('constellations')}</h2>
             <div className="space-y-3">
               {Object.entries(charInfo.constellations).map(([title, content]) => (
                 <div key={title} className="rounded-lg border border-border bg-card p-4">
@@ -317,7 +322,7 @@ export default function CharacterDetailPage() {
         {/* Artifacts Section */}
         {owned && accountCharacter && (
           <section>
-            <h2 className="mb-4 text-lg font-semibold text-foreground">Artifacts</h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">{tDetail('artifacts')}</h2>
 
             <ArtifactEquip
               characterName={charInfo.name}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { getCurrentUserId } from '@/lib/authToken';
 import { useBuild, useSavedBuilds, useMyBuilds } from '@/hooks/useBuilds';
@@ -37,12 +38,21 @@ import {
 } from 'lucide-react';
 import { ELEMENT_COLORS } from '@/types/character';
 import type { UpdateBuildDto } from '@/types/build';
+import { getArtifactSlotShortLabel, getArtifactStatLabel } from '@/lib/artifactI18n';
 
 export default function BuildDetailPage() {
   const params = useParams();
   const router = useRouter();
   const mounted = useMounted();
   const buildId = params.id as string;
+  const tDetail = useTranslations('buildDetail');
+  const tBuildsPage = useTranslations('buildsPage');
+  const tCommon = useTranslations('common');
+  const tElement = useTranslations('element');
+  const tWeapon = useTranslations('weapon');
+  const tStat = useTranslations('artifactStat');
+  const tSlotShort = useTranslations('artifactSlotShort');
+  const tServer = useTranslations('server');
 
   const { isLoggedIn, isLoading: authLoading, selectedAccountId } = useAuth();
 
@@ -114,7 +124,7 @@ export default function BuildDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this build?')) return;
+    if (!confirm(tDetail('deleteConfirm'))) return;
     await deleteBuild(buildId);
     router.push('/builds');
   };
@@ -140,7 +150,11 @@ export default function BuildDetailPage() {
 
   const handleGetRecommendations = () => {
     if (!accountCharacter) {
-      alert(`You don't have ${build?.character.name} in this account. Add the character first to get recommendations.`);
+      alert(
+        tDetail('missingCharacter', {
+          name: build?.character.name ?? '',
+        })
+      );
       return;
     }
     setShowRecommendations(true);
@@ -153,7 +167,7 @@ export default function BuildDetailPage() {
   if (buildLoading || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{tCommon('loading')}</div>
       </div>
     );
   }
@@ -161,10 +175,10 @@ export default function BuildDetailPage() {
   if (buildError || !build) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <div className="text-destructive">Build not found or access denied</div>
+        <div className="text-destructive">{tDetail('notFound')}</div>
         <Button variant="outline" onClick={() => router.push('/builds')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Builds
+          {tDetail('backToBuilds')}
         </Button>
       </div>
     );
@@ -185,7 +199,7 @@ export default function BuildDetailPage() {
           <div className="flex items-center gap-2 mb-4">
             <Button variant="ghost" size="sm" onClick={() => router.push('/builds')}>
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
+              {tDetail('back')}
             </Button>
           </div>
 
@@ -210,14 +224,17 @@ export default function BuildDetailPage() {
               <p className="text-muted-foreground">
                 {build.character.name}
                 <span className="mx-2">•</span>
-                <span style={{ color: elementColor }}>{build.character.element}</span>
+                <span style={{ color: elementColor }}>{tElement(build.character.element)}</span>
                 <span className="mx-2">•</span>
-                {build.character.weaponType}
+                {build.character.weaponType
+                  ? tWeapon(build.character.weaponType)
+                  : tCommon('unknown')}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                by {build.creator.email.split('@')[0]}
+                {tDetail('by', { name: build.creator.email.split('@')[0] })}
                 <span className="mx-2">•</span>
-                <Heart className="h-3 w-3 inline text-pink-500" /> {build.saveCount} saves
+                <Heart className="h-3 w-3 inline text-pink-500" />{' '}
+                {tDetail('saves', { count: build.saveCount })}
               </p>
             </div>
 
@@ -232,12 +249,12 @@ export default function BuildDetailPage() {
                   {isSaved ? (
                     <>
                       <HeartOff className="h-4 w-4 mr-1" />
-                      Unsave
+                      {tDetail('unsave')}
                     </>
                   ) : (
                     <>
                       <Heart className="h-4 w-4 mr-1" />
-                      Save
+                      {tDetail('save')}
                     </>
                   )}
                 </Button>
@@ -246,12 +263,12 @@ export default function BuildDetailPage() {
                 {copied ? (
                   <>
                     <Check className="h-4 w-4 mr-1" />
-                    Copied!
+                    {tDetail('copied')}
                   </>
                 ) : (
                   <>
                     <Share2 className="h-4 w-4 mr-1" />
-                    Share
+                    {tDetail('share')}
                   </>
                 )}
               </Button>
@@ -275,12 +292,12 @@ export default function BuildDetailPage() {
         {!isLoggedIn && (
           <div className="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Login to save builds and get personalized recommendations
+              {tBuildsPage('loginPrompt')}
             </p>
             <Link href="/login">
               <Button size="sm" variant="outline">
                 <LogIn className="h-4 w-4 mr-1" />
-                Login
+                {tBuildsPage('loginCta')}
               </Button>
             </Link>
           </div>
@@ -295,11 +312,11 @@ export default function BuildDetailPage() {
 
         {/* Artifact Set Configuration */}
         <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Artifact Set</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{tDetail('artifactSet')}</h2>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-2 py-1 rounded bg-primary/10 text-primary text-sm font-medium">
-                {build.useFullSet ? '4pc' : '2pc'}
+                {build.useFullSet ? tDetail('fullSetShort') : tDetail('twoPieceShort')}
               </span>
               <span className="text-foreground font-medium">{build.primarySet.name}</span>
             </div>
@@ -318,7 +335,7 @@ export default function BuildDetailPage() {
               <>
                 <div className="flex items-center gap-2 mt-3">
                   <span className="px-2 py-1 rounded bg-accent/10 text-accent text-sm font-medium">
-                    2pc
+                    {tDetail('twoPieceShort')}
                   </span>
                   <span className="text-foreground font-medium">{build.secondarySet.name}</span>
                 </div>
@@ -332,24 +349,38 @@ export default function BuildDetailPage() {
 
         {/* Recommended Main Stats */}
         <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Recommended Main Stats</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">
+            {tDetail('recommendedMainStats')}
+          </h2>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <div className="text-sm text-muted-foreground mb-1">Sands</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {getArtifactSlotShortLabel(tSlotShort, 'SANDS')}
+              </div>
               <div className="px-3 py-2 rounded bg-muted text-foreground text-center">
-                {build.recommendedMainStats.SANDS || 'Any'}
+                {build.recommendedMainStats.SANDS
+                  ? getArtifactStatLabel(tStat, build.recommendedMainStats.SANDS)
+                  : tCommon('all')}
               </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">Goblet</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {getArtifactSlotShortLabel(tSlotShort, 'GOBLET')}
+              </div>
               <div className="px-3 py-2 rounded bg-muted text-foreground text-center">
-                {build.recommendedMainStats.GOBLET || 'Any'}
+                {build.recommendedMainStats.GOBLET
+                  ? getArtifactStatLabel(tStat, build.recommendedMainStats.GOBLET)
+                  : tCommon('all')}
               </div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">Circlet</div>
+              <div className="text-sm text-muted-foreground mb-1">
+                {getArtifactSlotShortLabel(tSlotShort, 'CIRCLET')}
+              </div>
               <div className="px-3 py-2 rounded bg-muted text-foreground text-center">
-                {build.recommendedMainStats.CIRCLET || 'Any'}
+                {build.recommendedMainStats.CIRCLET
+                  ? getArtifactStatLabel(tStat, build.recommendedMainStats.CIRCLET)
+                  : tCommon('all')}
               </div>
             </div>
           </div>
@@ -357,16 +388,18 @@ export default function BuildDetailPage() {
 
         {/* Sub Stat Priority */}
         <div className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Sub Stat Priority</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-3">{tDetail('subStatPriority')}</h2>
           <div className="flex flex-wrap gap-2">
             {build.subStatPriority.map((stat, index) => (
               <div key={stat} className="flex items-center gap-1">
                 <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                   {index + 1}
                 </span>
-                <span className="px-2 py-1 rounded bg-muted text-foreground text-sm">{stat}</span>
+                <span className="px-2 py-1 rounded bg-muted text-foreground text-sm">
+                  {getArtifactStatLabel(tStat, stat)}
+                </span>
                 {index < build.subStatPriority.length - 1 && (
-                  <span className="text-muted-foreground">{'>'}</span>
+                  <span className="text-muted-foreground">{tDetail('prioritySeparator')}</span>
                 )}
               </div>
             ))}
@@ -376,7 +409,7 @@ export default function BuildDetailPage() {
         {/* Notes */}
         {build.notes && (
           <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-lg font-semibold text-foreground mb-3">Notes</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">{tDetail('notes')}</h2>
             <p className="text-muted-foreground whitespace-pre-wrap">{build.notes}</p>
           </div>
         )}
@@ -384,9 +417,11 @@ export default function BuildDetailPage() {
         {/* Recommendations Section - only for logged in users */}
         {isLoggedIn && (
           <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-lg font-semibold text-foreground mb-3">Get Recommendations</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">
+              {tDetail('getRecommendations')}
+            </h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Select an account to get personalized artifact recommendations based on this build.
+              {tDetail('recommendationsHint')}
             </p>
 
             <div className="flex items-center gap-3 mb-4">
@@ -397,13 +432,13 @@ export default function BuildDetailPage() {
               >
                 {accounts.map((account) => (
                   <option key={account.id} value={account.id}>
-                    {account.nickname || `${account.uid} (${account.server})`}
+                    {account.nickname || `${account.uid} (${tServer(account.server)})`}
                   </option>
                 ))}
               </select>
               <Button onClick={handleGetRecommendations} disabled={!localSelectedAccountId}>
                 <Sparkles className="h-4 w-4 mr-2" />
-                Get Recommendations
+                {tDetail('getRecommendationsAction')}
               </Button>
             </div>
 
@@ -423,8 +458,8 @@ export default function BuildDetailPage() {
         <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
           <SheetContent side="right" className="overflow-y-auto w-full sm:max-w-lg">
             <SheetHeader>
-              <SheetTitle>Edit Build</SheetTitle>
-              <SheetDescription>Update your artifact build configuration.</SheetDescription>
+              <SheetTitle>{tDetail('editTitle')}</SheetTitle>
+              <SheetDescription>{tDetail('editDescription')}</SheetDescription>
             </SheetHeader>
             <div className="p-4">
               <BuildForm

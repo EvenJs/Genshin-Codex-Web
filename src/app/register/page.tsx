@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function RegisterPage() {
+  const tAuth = useTranslations('auth');
+  const tAuthPage = useTranslations('authPage');
   const { register } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -19,12 +22,12 @@ export default function RegisterPage() {
 
     // Frontend validation
     if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
+      setError(tAuth('passwordMismatch'));
       return;
     }
 
     if (password.length < 6) {
-      setError('密码长度至少为 6 位');
+      setError(tAuth('passwordMinLength'));
       return;
     }
 
@@ -34,7 +37,7 @@ export default function RegisterPage() {
       await register(email, password);
       window.location.href = '/achievements';
     } catch (err) {
-      setError(err instanceof Error ? err.message : '注册失败');
+      setError(err instanceof Error ? err.message : tAuth('registerFailed'));
     } finally {
       setLoading(false);
     }
@@ -44,12 +47,12 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 px-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center text-zinc-900 dark:text-zinc-100 mb-6">
-          注册
+          {tAuth('registerTitle')}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">邮箱</label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">{tAuth('email')}</label>
             <input
               type="email"
               value={email}
@@ -60,7 +63,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">密码</label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">{tAuth('password')}</label>
             <input
               type="password"
               value={password}
@@ -71,7 +74,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">确认密码</label>
+            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">{tAuth('confirmPassword')}</label>
             <input
               type="password"
               value={confirmPassword}
@@ -88,14 +91,14 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? '注册中...' : '注册'}
+            {loading ? tAuth('registering') : tAuth('registerButton')}
           </button>
         </form>
 
         <p className="mt-4 text-center text-sm text-zinc-600 dark:text-zinc-400">
-          已有账号？
+          {tAuthPage('haveAccount')}
           <Link href="/login" className="ml-1 text-blue-600 hover:underline">
-            去登录
+            {tAuth('goToLogin')}
           </Link>
         </p>
       </div>

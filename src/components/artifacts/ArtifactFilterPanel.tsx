@@ -1,9 +1,10 @@
 'use client';
 
 import { Filter } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { ArtifactSlot, ArtifactSet } from '@/types/artifact';
-import { SLOT_NAMES_SHORT } from '@/types/artifact';
+import { getArtifactSlotShortLabel } from '@/lib/artifactI18n';
 
 interface ArtifactFilterPanelProps {
   artifactSets: ArtifactSet[];
@@ -31,6 +32,10 @@ export function ArtifactFilterPanel({
   onRarityChange,
   onEquippedChange,
 }: ArtifactFilterPanelProps) {
+  const tArtifacts = useTranslations('artifacts');
+  const tFilters = useTranslations('artifactFilters');
+  const tCommon = useTranslations('common');
+  const tSlotShort = useTranslations('artifactSlotShort');
   const selectClassName =
     'flex-1 sm:flex-none sm:w-40 rounded-lg border border-input bg-card px-3 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary';
 
@@ -42,7 +47,7 @@ export function ArtifactFilterPanel({
         onChange={(e) => onSetChange(e.target.value)}
         className={selectClassName}
       >
-        <option value="">All Sets</option>
+        <option value="">{tArtifacts('allSets')}</option>
         {artifactSets.map((set) => (
           <option key={set.id} value={set.id}>
             {set.name}
@@ -56,10 +61,10 @@ export function ArtifactFilterPanel({
         onChange={(e) => onSlotChange(e.target.value as ArtifactSlot | '')}
         className={selectClassName}
       >
-        <option value="">All Slots</option>
+        <option value="">{tArtifacts('allSlots')}</option>
         {SLOTS.map((slot) => (
           <option key={slot} value={slot}>
-            {SLOT_NAMES_SHORT[slot]}
+            {getArtifactSlotShortLabel(tSlotShort, slot)}
           </option>
         ))}
       </select>
@@ -72,7 +77,7 @@ export function ArtifactFilterPanel({
         }
         className={selectClassName}
       >
-        <option value="">All Rarities</option>
+        <option value="">{tArtifacts('allRarities')}</option>
         {RARITIES.map((r) => (
           <option key={r} value={r}>
             {'★'.repeat(r)}
@@ -89,9 +94,9 @@ export function ArtifactFilterPanel({
         }}
         className={selectClassName}
       >
-        <option value="">All</option>
-        <option value="true">Equipped</option>
-        <option value="false">Unequipped</option>
+        <option value="">{tCommon('all')}</option>
+        <option value="true">{tArtifacts('equipped')}</option>
+        <option value="false">{tArtifacts('unequipped')}</option>
       </select>
     </div>
   );
@@ -105,9 +110,9 @@ export function ArtifactFilterPanel({
             <button className="flex w-full items-center justify-between rounded-lg border border-input bg-card px-4 py-2.5 text-sm text-foreground">
               <span className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
-                Filters
+                {tFilters('filters')}
               </span>
-              <span className="text-xs text-muted-foreground">Tap to expand</span>
+              <span className="text-xs text-muted-foreground">{tFilters('tapToExpand')}</span>
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-3">{filterContent}</CollapsibleContent>
