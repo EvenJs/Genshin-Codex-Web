@@ -21,7 +21,8 @@
     "logout": "Logout",
     "register": "Register",
     "browse": "Browse",
-    "progress": "Progress"
+    "progress": "Progress",
+    "builds": "Builds"
   },
   "auth": {
     "email": "Email",

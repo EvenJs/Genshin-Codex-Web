@@ -21,7 +21,8 @@
     "logout": "退出登录",
     "register": "注册",
     "browse": "浏览",
-    "progress": "进度"
+    "progress": "进度",
+    "builds": "配装"
   },
   "auth": {
     "email": "邮箱",

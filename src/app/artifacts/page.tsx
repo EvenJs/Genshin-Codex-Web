@@ -85,43 +85,14 @@ export default function ArtifactsPage() {
     return null;
   }
 
-  // Show login prompt if not logged in
-  if (!authLoading && !isLoggedIn) {
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card">
-          <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Artifacts</h1>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-          <div className="py-12 text-center">
-            <Package className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-            <h2 className="text-lg font-semibold text-foreground mb-2">
-              Manage Your Artifacts
-            </h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Login to add, organize, and track your artifact collection. You can also use OCR to scan artifacts from screenshots.
-            </p>
-            <Link href="/login">
-              <Button>
-                <LogIn className="h-4 w-4 mr-2" />
-                Login to Get Started
-              </Button>
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Artifacts</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+              {isUserMode ? 'My Artifacts' : 'Artifacts'}
+            </h1>
             {isUserMode && (
               <Button onClick={() => setIsFormOpen(true)} size="sm">
                 <Plus className="h-4 w-4 mr-1" />
@@ -133,6 +104,20 @@ export default function ArtifactsPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
+        {!authLoading && !isLoggedIn && (
+          <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Login to add, organize, and track your personal artifacts
+            </p>
+            <Link href="/login">
+              <Button size="sm" variant="outline">
+                <LogIn className="h-4 w-4 mr-1" />
+                Login
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Stats */}
         {isUserMode && stats && !statsLoading && (
           <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
@@ -258,6 +243,54 @@ export default function ArtifactsPage() {
                 </Button>
               </div>
             )}
+          </>
+        )}
+
+        {!isLoading && !error && !isUserMode && (
+          <>
+            <div className="mb-4 text-sm text-muted-foreground">
+              {artifactSets.length} artifact sets
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {artifactSets.map((set) => (
+                <div
+                  key={set.id}
+                  className="rounded-xl border border-border bg-card p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    {set.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={set.imageUrl}
+                        alt={set.name}
+                        className="h-16 w-16 rounded-lg object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                        <Package className="h-6 w-6" />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-foreground">{set.name}</h3>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Rarity: {set.rarity.join('/')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-sm text-foreground">
+                    <div className="font-medium">2-Piece</div>
+                    <p className="text-muted-foreground">{set.twoPieceBonus}</p>
+                  </div>
+                  {set.fourPieceBonus && (
+                    <div className="mt-3 text-sm text-foreground">
+                      <div className="font-medium">4-Piece</div>
+                      <p className="text-muted-foreground">{set.fourPieceBonus}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </main>

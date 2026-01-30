@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
-import { Trophy, User, Home, LogIn, Gem, Users } from 'lucide-react';
+import { Trophy, User, Home, Gem, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItemProps {
@@ -46,6 +46,7 @@ export function BottomNav() {
   const isArtifactsActive = pathname === '/artifacts' || pathname.startsWith('/artifacts/');
   const isCharactersActive = pathname === '/characters' || pathname.startsWith('/characters/');
   const isBuildsActive = pathname === '/builds' || pathname.startsWith('/builds/');
+  const isAccountsActive = pathname === '/accounts' || pathname.startsWith('/accounts/');
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card md:hidden">
@@ -69,21 +70,20 @@ export function BottomNav() {
           isActive={isArtifactsActive}
         />
 
-        {!isLoading && isLoggedIn ? (
+        <NavItem
+          href="/builds"
+          icon={<Home className="h-5 w-5" />}
+          label={t('builds')}
+          isActive={isBuildsActive}
+        />
+        {!isLoading && (
           <NavItem
-            href="/builds"
-            icon={<Home className="h-5 w-5" />}
-            label={t('builds')}
-            isActive={isBuildsActive}
+            href="/accounts"
+            icon={<User className="h-5 w-5" />}
+            label={t('accounts')}
+            isActive={isAccountsActive}
           />
-        ) : !isLoading ? (
-          <NavItem
-            href="/login"
-            icon={<LogIn className="h-5 w-5" />}
-            label={t('login')}
-            isActive={false}
-          />
-        ) : null}
+        )}
       </div>
     </nav>
   );

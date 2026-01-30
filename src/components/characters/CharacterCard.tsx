@@ -25,6 +25,7 @@ interface CharacterCardProps {
 export function CharacterCard({ character, onClick, compact = false }: CharacterCardProps) {
   const { character: charInfo, level, constellation } = character;
   const elementColor = ELEMENT_COLORS[charInfo.element];
+  const avatarUrl = charInfo.imageUrl;
 
   if (compact) {
     return (
@@ -37,10 +38,20 @@ export function CharacterCard({ character, onClick, compact = false }: Character
       >
         {/* Avatar placeholder */}
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-lg"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-lg overflow-hidden"
           style={{ backgroundColor: `${elementColor}20` }}
         >
-          {ELEMENT_ICONS[charInfo.element]}
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={charInfo.name}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            ELEMENT_ICONS[charInfo.element]
+          )}
         </div>
 
         {/* Info */}
@@ -89,10 +100,20 @@ export function CharacterCard({ character, onClick, compact = false }: Character
         {/* Avatar and basic info */}
         <div className="flex items-start gap-3">
           <div
-            className="flex h-14 w-14 items-center justify-center rounded-lg text-2xl shrink-0"
+            className="flex h-14 w-14 items-center justify-center rounded-lg text-2xl shrink-0 overflow-hidden"
             style={{ backgroundColor: `${elementColor}20` }}
           >
-            {ELEMENT_ICONS[charInfo.element]}
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={charInfo.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              ELEMENT_ICONS[charInfo.element]
+            )}
           </div>
 
           <div className="flex-1 min-w-0">

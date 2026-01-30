@@ -35,10 +35,11 @@ export function usePublicAchievements(
   params: AchievementsParams = {}
 ): UsePublicAchievementsResult {
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, region } = params;
+  const safePageSize = Math.min(pageSize, 100);
 
   const searchParams = new URLSearchParams();
   searchParams.set('page', String(page));
-  searchParams.set('pageSize', String(pageSize));
+  searchParams.set('pageSize', String(safePageSize));
   if (q) searchParams.set('q', q);
   if (category) searchParams.set('category', category);
   if (region) searchParams.set('region', region);
@@ -55,7 +56,7 @@ export function usePublicAchievements(
     items: data?.items ?? [],
     total: data?.total ?? 0,
     page: data?.page ?? page,
-    pageSize: data?.pageSize ?? pageSize,
+    pageSize: data?.pageSize ?? safePageSize,
     isLoading,
     isValidating,
     error: error ?? null,
@@ -84,10 +85,11 @@ export function useUserAchievements(
   params: AchievementsParams = {}
 ): UseUserAchievementsResult {
   const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, region } = params;
+  const safePageSize = Math.min(pageSize, 100);
 
   const searchParams = new URLSearchParams();
   searchParams.set('page', String(page));
-  searchParams.set('pageSize', String(pageSize));
+  searchParams.set('pageSize', String(safePageSize));
   if (q) searchParams.set('q', q);
   if (category) searchParams.set('category', category);
   if (region) searchParams.set('region', region);
@@ -143,7 +145,7 @@ export function useUserAchievements(
     items: data?.items ?? [],
     total: data?.total ?? 0,
     page: data?.page ?? page,
-    pageSize: data?.pageSize ?? pageSize,
+    pageSize: data?.pageSize ?? safePageSize,
     stats: data?.stats ?? null,
     isLoading,
     isValidating,

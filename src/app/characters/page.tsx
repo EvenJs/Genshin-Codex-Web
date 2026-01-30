@@ -469,6 +469,7 @@ interface PublicCharacterCardProps {
 
 function PublicCharacterCard({ character }: PublicCharacterCardProps) {
   const elementColor = ELEMENT_COLORS[character.element];
+  const avatarUrl = character.imageUrl;
 
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
@@ -476,10 +477,20 @@ function PublicCharacterCard({ character }: PublicCharacterCardProps) {
       <div className="p-3">
         <div className="flex justify-center mb-2">
           <div
-            className="flex h-14 w-14 items-center justify-center rounded-lg text-2xl"
+            className="flex h-14 w-14 items-center justify-center rounded-lg text-2xl overflow-hidden"
             style={{ backgroundColor: `${elementColor}20` }}
           >
-            {ELEMENT_ICONS[character.element]}
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={character.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              ELEMENT_ICONS[character.element]
+            )}
           </div>
         </div>
         <h3 className="font-semibold text-foreground text-center text-sm truncate">

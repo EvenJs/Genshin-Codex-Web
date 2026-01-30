@@ -38,7 +38,7 @@ export default function AchievementsPage() {
   // Public achievements (for filter options and when not logged in)
   const { items: allPublicItems } = usePublicAchievements({
     page: 1,
-    pageSize: 1000,
+    pageSize: 100,
   });
 
   const {

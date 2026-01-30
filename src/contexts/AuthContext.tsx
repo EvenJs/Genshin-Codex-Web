@@ -95,6 +95,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [mounted, isLoggedIn, fetchAccounts]);
 
+  // Auto-select first account when none is selected or selection is invalid
+  useEffect(() => {
+    if (!mounted || !isLoggedIn || accounts.length === 0) return;
+    if (selectedAccountId && accounts.some((a) => a.id === selectedAccountId)) return;
+
+    const nextId = accounts[0]?.id;
+    if (!nextId) return;
+    setSelectedAccountId(nextId);
+    localStorage.setItem(SELECTED_ACCOUNT_KEY, nextId);
+  }, [mounted, isLoggedIn, accounts, selectedAccountId]);
+
   // Login action
   const login = useCallback(async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
