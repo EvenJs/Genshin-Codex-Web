@@ -73,8 +73,8 @@ export default function CharactersPage() {
   const isLoading = authLoading || accountsLoading || (isUserMode ? userLoading : allLoading);
   const error = isUserMode ? userError : allError;
 
-  // Filter public characters
-  const filteredPublicCharacters = allCharacters.filter((c) => {
+  // Filter all characters (public data)
+  const filteredAllCharacters = allCharacters.filter((c) => {
     const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesElement = !selectedElement || c.element === selectedElement;
     const matchesWeapon = !selectedWeapon || c.weaponType === selectedWeapon;
@@ -82,18 +82,19 @@ export default function CharactersPage() {
     return matchesSearch && matchesElement && matchesWeapon && matchesRarity;
   });
 
+  const filteredPublicCharacters = filteredAllCharacters;
+
   // Filter user characters
-  const filteredUserCharacters = userCharacters.filter((c) => {
-    const matchesSearch = !searchQuery || c.character.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesElement = !selectedElement || c.character.element === selectedElement;
-    return matchesSearch && matchesElement;
-  });
+  const filteredAllCharacterIds = new Set(filteredAllCharacters.map((c) => c.id));
+  const ownedCharacterIds = new Set(userCharacters.map((c) => c.character.id));
+  const filteredOwnedCharacters = userCharacters.filter((c) => filteredAllCharacterIds.has(c.character.id));
+  const filteredUnownedCharacters = filteredAllCharacters.filter((c) => !ownedCharacterIds.has(c.id));
 
   // Group by rarity
   const publicFiveStars = filteredPublicCharacters.filter((c) => c.rarity === 5);
   const publicFourStars = filteredPublicCharacters.filter((c) => c.rarity === 4);
-  const userFiveStars = filteredUserCharacters.filter((c) => c.character.rarity === 5);
-  const userFourStars = filteredUserCharacters.filter((c) => c.character.rarity === 4);
+  const allFiveStars = filteredAllCharacters.filter((c) => c.rarity === 5);
+  const allFourStars = filteredAllCharacters.filter((c) => c.rarity === 4);
 
   // Existing character IDs for form filtering
   const existingCharacterIds = userCharacters.map((c) => c.character.id);
@@ -184,17 +185,17 @@ export default function CharactersPage() {
         {/* Stats */}
         <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
           <StatCard
-            value={isUserMode ? userCharacters.length : allCharacters.length}
-            label={isUserMode ? tPage('statsTotalMy') : tPage('statsTotalAll')}
+            value={isUserMode ? filteredAllCharacters.length : allCharacters.length}
+            label={isUserMode ? tPage('statsTotalAll') : tPage('statsTotalAll')}
             icon={<Users className="h-4 w-4" />}
           />
           <StatCard
-            value={isUserMode ? userFiveStars.length : publicFiveStars.length}
+            value={isUserMode ? allFiveStars.length : publicFiveStars.length}
             label={tPage('fiveStar')}
             variant="gold"
           />
           <StatCard
-            value={isUserMode ? userFourStars.length : publicFourStars.length}
+            value={isUserMode ? allFourStars.length : publicFourStars.length}
             label={tPage('fourStar')}
             variant="purple"
             className="hidden sm:block"
@@ -302,37 +303,37 @@ export default function CharactersPage() {
           <>
             <div className="mb-4 text-sm text-muted-foreground">
               {tPage('charactersCount', {
-                count: isUserMode ? filteredUserCharacters.length : filteredPublicCharacters.length,
+                count: isUserMode ? filteredAllCharacters.length : filteredPublicCharacters.length,
               })}
             </div>
 
             {isUserMode ? (
-              // User characters view
-              filteredUserCharacters.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="text-muted-foreground mb-4">
-                    {userCharacters.length === 0
-                      ? tPage('emptyUser')
-                      : tPage('noCharactersFound')}
-                  </p>
-                  {userCharacters.length === 0 && (
-                    <Button onClick={() => setIsFormOpen(true)}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      {tPage('addCharacter')}
-                    </Button>
-                  )}
+              // User characters view (owned + unowned)
+              filteredAllCharacters.length === 0 ? (
+                <div className="py-12 text-center text-muted-foreground">
+                  {tPage('noCharactersFound')}
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* 5-Star Characters */}
-                  {userFiveStars.length > 0 && (
-                    <section>
-                      <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-amber-500">★★★★★</span>{' '}
-                        {tPage('sectionFiveStar', { count: userFiveStars.length })}
-                      </h2>
+                  <section>
+                    <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      {tPage('sectionOwned', { count: filteredOwnedCharacters.length })}
+                    </h2>
+                    {filteredOwnedCharacters.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                        <div>{tPage('emptyUser')}</div>
+                        {userCharacters.length === 0 && (
+                          <div className="mt-4">
+                            <Button onClick={() => setIsFormOpen(true)} size="sm">
+                              <Plus className="h-4 w-4 mr-1" />
+                              {tPage('addCharacter')}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
                       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {userFiveStars.map((char) => (
+                        {filteredOwnedCharacters.map((char) => (
                           <div key={char.id} className="group relative">
                             <CharacterCard character={char} onClick={handleCharacterClick} />
                             <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -359,46 +360,25 @@ export default function CharactersPage() {
                           </div>
                         ))}
                       </div>
-                    </section>
-                  )}
+                    )}
+                  </section>
 
-                  {/* 4-Star Characters */}
-                  {userFourStars.length > 0 && (
-                    <section>
-                      <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-purple-500">★★★★</span>{' '}
-                        {tPage('sectionFourStar', { count: userFourStars.length })}
-                      </h2>
-                      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {userFourStars.map((char) => (
-                          <div key={char.id} className="group relative">
-                            <CharacterCard character={char} onClick={handleCharacterClick} />
-                            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={(e) => handleEdit(char, e)}
-                                className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
-                                title={tCommon('edit')}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDelete(char.id, e)}
-                                className={cn(
-                                  'rounded-lg p-1.5 shadow-sm transition-colors',
-                                  deleteConfirm === char.id
-                                    ? 'bg-destructive text-destructive-foreground'
-                                    : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
-                                )}
-                                title={deleteConfirm === char.id ? tCommon('clickAgainToConfirm') : tCommon('delete')}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
+                  <section>
+                    <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      {tPage('sectionUnowned', { count: filteredUnownedCharacters.length })}
+                    </h2>
+                    {filteredUnownedCharacters.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                        {tPage('noCharactersFound')}
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                        {filteredUnownedCharacters.map((char) => (
+                          <PublicCharacterCard key={char.id} character={char} />
                         ))}
                       </div>
-                    </section>
-                  )}
+                    )}
+                  </section>
                 </div>
               )
             ) : (

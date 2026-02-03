@@ -98,6 +98,8 @@
     "addCharacter": "Add Character",
     "sectionFiveStar": "5-Star ({count})",
     "sectionFourStar": "4-Star ({count})",
+    "sectionOwned": "Owned ({count})",
+    "sectionUnowned": "Not Owned ({count})",
     "editTitle": "Edit Character",
     "addTitle": "Add Character",
     "editDescription": "Update character level and constellation.",

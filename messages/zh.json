@@ -98,6 +98,8 @@
     "addCharacter": "添加角色",
     "sectionFiveStar": "五星（{count}）",
     "sectionFourStar": "四星（{count}）",
+    "sectionOwned": "已拥有（{count}）",
+    "sectionUnowned": "未拥有（{count}）",
     "editTitle": "编辑角色",
     "addTitle": "添加角色",
     "editDescription": "更新角色等级与命座。",
