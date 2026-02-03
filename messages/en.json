@@ -168,7 +168,17 @@
     "earned": "Earned",
     "searchPlaceholder": "Search achievements...",
     "noAchievements": "No achievements found",
-    "done": "Done"
+    "done": "Done",
+    "categoriesTitle": "Achievement Categories",
+    "categoriesSubtitle": "{count} achievements in total",
+    "totalCategories": "Categories",
+    "totalAchievements": "Total Achievements",
+    "searchCategoriesPlaceholder": "Search categories...",
+    "categoriesCount": "{count} categories",
+    "noCategories": "No categories found",
+    "achievementCount": "{count} achievements",
+    "backToCategories": "Back to Categories",
+    "categorySubtitle": "{count} achievements"
   },
   "achievementsPage": {
     "titleMy": "My Achievements",

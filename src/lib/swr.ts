@@ -64,6 +64,11 @@ export const cacheKeys = {
     const base = '/achievements';
     return params ? `${base}?${params.toString()}` : base;
   },
+  achievementCategories: (params?: URLSearchParams) => {
+    const base = '/achievement-categories';
+    return params ? `${base}?${params.toString()}` : base;
+  },
+  achievementCategory: (id: string) => `/achievement-categories/${id}`,
   // Artifacts
   artifactSets: () => '/artifact-sets',
   artifactSet: (id: string) => `/artifact-sets/${id}`,

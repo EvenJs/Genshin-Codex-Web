@@ -168,7 +168,17 @@
     "earned": "已获得",
     "searchPlaceholder": "搜索成就...",
     "noAchievements": "未找到成就",
-    "done": "完成"
+    "done": "完成",
+    "categoriesTitle": "成就分类",
+    "categoriesSubtitle": "共 {count} 个成就",
+    "totalCategories": "分类数",
+    "totalAchievements": "成就总数",
+    "searchCategoriesPlaceholder": "搜索分类...",
+    "categoriesCount": "共 {count} 个分类",
+    "noCategories": "暂无分类",
+    "achievementCount": "{count} 个成就",
+    "backToCategories": "返回分类列表",
+    "categorySubtitle": "共 {count} 个成就"
   },
   "achievementsPage": {
     "titleMy": "我的成就",

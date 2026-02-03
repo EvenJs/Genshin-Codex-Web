@@ -43,7 +43,7 @@ export function AchievementsPage() {
     const regionSet = new Set<string>();
 
     allItems.forEach((item) => {
-      if (item.category) categorySet.add(item.category);
+      if (item.category?.title) categorySet.add(item.category.title);
       if (item.region) regionSet.add(item.region);
     });
 

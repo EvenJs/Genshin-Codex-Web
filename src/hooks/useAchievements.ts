@@ -14,6 +14,7 @@ export interface AchievementsParams {
   pageSize?: number;
   q?: string;
   category?: string;
+  categoryId?: string;
   region?: string;
 }
 
@@ -34,7 +35,7 @@ export interface UsePublicAchievementsResult {
 export function usePublicAchievements(
   params: AchievementsParams = {}
 ): UsePublicAchievementsResult {
-  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, region } = params;
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, categoryId, region } = params;
   const safePageSize = Math.min(pageSize, 100);
 
   const searchParams = new URLSearchParams();
@@ -42,6 +43,7 @@ export function usePublicAchievements(
   searchParams.set('pageSize', String(safePageSize));
   if (q) searchParams.set('q', q);
   if (category) searchParams.set('category', category);
+  if (categoryId) searchParams.set('categoryId', categoryId);
   if (region) searchParams.set('region', region);
 
   const key = cacheKeys.achievements(searchParams);
@@ -84,7 +86,7 @@ export function useUserAchievements(
   accountId: string | null,
   params: AchievementsParams = {}
 ): UseUserAchievementsResult {
-  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, region } = params;
+  const { page = 1, pageSize = DEFAULT_PAGE_SIZE, q, category, categoryId, region } = params;
   const safePageSize = Math.min(pageSize, 100);
 
   const searchParams = new URLSearchParams();
@@ -92,6 +94,7 @@ export function useUserAchievements(
   searchParams.set('pageSize', String(safePageSize));
   if (q) searchParams.set('q', q);
   if (category) searchParams.set('category', category);
+  if (categoryId) searchParams.set('categoryId', categoryId);
   if (region) searchParams.set('region', region);
 
   const key = accountId ? cacheKeys.accountAchievements(accountId, searchParams) : null;
@@ -106,8 +109,8 @@ export function useUserAchievements(
     async (achievementId: string, completed: boolean): Promise<void> => {
       if (!accountId) return;
 
-      await apiFetch(`/accounts/${accountId}/achievements/${achievementId}`, {
-        method: 'PATCH',
+      await apiFetch(`/accounts/${accountId}/progress/${achievementId}`, {
+        method: 'PUT',
         body: JSON.stringify({ completed }),
       });
 

@@ -82,7 +82,7 @@ export default function AchievementDetailPage() {
               <div>
                 <span className="text-sm text-zinc-500 dark:text-zinc-400">{t('category')}: </span>
                 <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  {achievement.category}
+                  {achievement.category?.title}
                 </span>
               </div>
               {achievement.region && (

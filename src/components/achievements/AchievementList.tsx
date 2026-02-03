@@ -31,7 +31,7 @@ export function AchievementList({ items }: AchievementListProps) {
                 </p>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 text-xs">
                   <span className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded">
-                    {item.category}
+                    {item.category?.title}
                   </span>
                   {item.region && (
                     <span className="px-2 py-0.5 bg-accent/20 text-accent-foreground rounded">
