@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Gem, Send, Sparkles, Trash2, User } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import { getToken } from '@/lib/authToken';
 import type { AiChatResponse, AiChatStreamEvent } from '@/types/aiChat';
@@ -180,8 +182,30 @@ export function AiChatbot() {
     setError(null);
   };
 
+  const markdownClassName =
+    'break-words whitespace-pre-wrap leading-[1.7] text-[#32353b] ' +
+    '[&_h1]:mt-4 [&_h1]:mb-2 [&_h1]:text-[#c88c24] [&_h1]:text-base [&_h1:first-child]:mt-0 ' +
+    '[&_h2]:mt-3 [&_h2]:mb-2 [&_h2]:text-[#c88c24] [&_h2]:text-sm ' +
+    '[&_h3]:mt-3 [&_h3]:mb-2 [&_h3]:text-[#c88c24] [&_h3]:text-sm ' +
+    '[&_p]:mb-2 ' +
+    '[&_ul]:ml-5 [&_ol]:ml-5 [&_ul]:mb-2 [&_ol]:mb-2 [&_li]:leading-[1.8] [&_ul]:space-y-1 [&_ol]:space-y-1 ' +
+    '[&_table]:mt-3 [&_table]:w-full [&_table]:border-collapse ' +
+    '[&_th]:bg-[#3a3125] [&_th]:text-[#f0ebe3] [&_th]:text-left [&_th]:px-3 [&_th]:py-2 ' +
+    '[&_td]:border [&_td]:border-[#e6d3ae] [&_td]:px-3 [&_td]:py-2 ' +
+    '[&_tbody_tr:nth-child(even)]:bg-[#f6f1e9] [&_tbody_tr:nth-child(odd)]:bg-[#fffaf1] ' +
+    '[&_strong]:text-[#d97706] ' +
+    '[&_code]:whitespace-pre-wrap [&_code]:break-words ' +
+    '[&_pre]:mt-2 [&_pre]:rounded-md [&_pre]:bg-[#f6f1e9] [&_pre]:p-3 [&_pre]:whitespace-pre-wrap [&_pre]:break-words';
+
   const renderAssistantContent = (content: string) => {
     const text = content ?? '';
+    if (text.toLowerCase().includes('unauthorized')) {
+      return (
+        <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-600">
+          Unauthorized. Please login to continue.
+        </div>
+      );
+    }
     const keywordIcons = [
       { keyword: '圣遗物', Icon: Gem },
       { keyword: 'artifact', Icon: Gem },
@@ -193,18 +217,20 @@ export function AiChatbot() {
       text.toLowerCase().includes(keyword.toLowerCase()),
     );
 
-    if (matchedIcons.length === 0) {
-      return text || (isStreaming && '...');
-    }
+    const markdown = text || (isStreaming && '...') || '';
 
     return (
       <div className="flex items-start gap-2">
-        <div className="mt-0.5 flex items-center gap-1 text-[#c9a35a]">
-          {matchedIcons.map(({ keyword, Icon }) => (
-            <Icon key={keyword} className="h-4 w-4" />
-          ))}
-        </div>
-        <span>{text || (isStreaming && '...')}</span>
+        {matchedIcons.length > 0 && (
+          <div className="mt-0.5 flex items-center gap-1 text-[#c9a35a]">
+            {matchedIcons.map(({ keyword, Icon }) => (
+              <Icon key={keyword} className="h-4 w-4" />
+            ))}
+          </div>
+        )}
+        <ReactMarkdown remarkPlugins={[remarkGfm]} className={markdownClassName}>
+          {markdown}
+        </ReactMarkdown>
       </div>
     );
   };
@@ -270,7 +296,7 @@ export function AiChatbot() {
 
               <div
                 className={cn(
-                  'max-w-[75%] px-4 py-3 text-sm leading-relaxed shadow-sm',
+                  'max-w-[75%] px-4 py-3 text-sm leading-[1.7] shadow-sm',
                   message.role === 'user'
                     ? 'rounded-[18px_18px_2px_18px] bg-[linear-gradient(135deg,#b78b2e,#8c5f14)] text-white'
                     : 'rounded-[18px_18px_18px_2px] border border-[#e2c27a] bg-[rgba(255,255,255,0.65)] text-[#32353b]',

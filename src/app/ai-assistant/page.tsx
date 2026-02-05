@@ -23,22 +23,22 @@ export default function AiAssistantPage() {
         </p>
       </div>
 
-      {!isLoading && !isLoggedIn ? (
-        <div className="rounded-xl border border-border bg-card px-6 py-6 text-center">
+      {!isLoading && !isLoggedIn && (
+        <div className="mb-6 rounded-xl border border-border bg-card px-6 py-5 text-center">
           <p className="text-sm text-muted-foreground">
             {t('loginPrompt')}
           </p>
           <Link
             href="/login"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             <LogIn className="h-4 w-4" />
             {t('loginAction')}
           </Link>
         </div>
-      ) : (
-        <AiChatbot />
       )}
+
+      <AiChatbot />
     </div>
   );
 }
