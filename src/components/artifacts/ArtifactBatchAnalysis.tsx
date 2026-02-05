@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Sparkles,
   Loader2,
@@ -15,6 +16,7 @@ import { useBatchAnalysis } from '@/hooks/useArtifactAnalysis';
 import type { UserArtifact } from '@/types/artifact';
 import type { BatchArtifactSummary } from '@/types/artifactAnalysis';
 import { GRADE_COLORS, TIER_COLORS } from '@/types/artifactAnalysis';
+import { AiFeedback } from '@/components/ai/AiFeedback';
 
 interface ArtifactBatchAnalysisProps {
   accountId: string;
@@ -31,12 +33,15 @@ export function ArtifactBatchAnalysis({
   characterId,
   onArtifactClick,
 }: ArtifactBatchAnalysisProps) {
+  const t = useTranslations('aiBatch');
+  const locale = useLocale();
   const { batchResult, isAnalyzing, error, analyzeBatch } = useBatchAnalysis(accountId);
   const [sortBy, setSortBy] = useState<'rank' | 'grade' | 'name'>('rank');
+  const sortLabel = t(`sort.${sortBy}`);
 
   const handleAnalyze = async () => {
     if (selectedIds.length === 0) return;
-    await analyzeBatch(selectedIds, characterId);
+    await analyzeBatch(selectedIds, characterId, locale);
   };
 
   // Create a map of artifact details
@@ -81,9 +86,9 @@ export function ArtifactBatchAnalysis({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-accent" />
-          <h3 className="font-semibold text-foreground">Batch Analysis</h3>
+          <h3 className="font-semibold text-foreground">{t('title')}</h3>
           <span className="text-xs text-muted-foreground">
-            ({selectedIds.length} selected)
+            {t('selectedCount', { count: selectedIds.length })}
           </span>
         </div>
 
@@ -94,7 +99,7 @@ export function ArtifactBatchAnalysis({
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowUpDown className="h-3 w-3" />
-              Sort: {sortBy}
+              {t('sortLabel', { label: sortLabel })}
             </button>
           </div>
         )}
@@ -106,7 +111,7 @@ export function ArtifactBatchAnalysis({
           <div className="text-center py-6">
             <Package className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground">
-              Select artifacts to analyze them together
+              {t('emptyPrompt')}
             </p>
           </div>
         )}
@@ -116,7 +121,7 @@ export function ArtifactBatchAnalysis({
           <div className="text-center py-6">
             <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground mb-4">
-              Analyze {selectedIds.length} artifacts at once
+              {t('readyPrompt', { count: selectedIds.length })}
             </p>
             <button
               onClick={handleAnalyze}
@@ -124,10 +129,10 @@ export function ArtifactBatchAnalysis({
               className="inline-flex items-center gap-2 rounded-md bg-accent/20 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Sparkles className="h-4 w-4" />
-              Analyze All ({selectedIds.length})
+              {t('analyzeAll', { count: selectedIds.length })}
             </button>
             {selectedIds.length > 20 && (
-              <p className="text-xs text-destructive mt-2">Maximum 20 artifacts per batch</p>
+              <p className="text-xs text-destructive mt-2">{t('maxLimit')}</p>
             )}
           </div>
         )}
@@ -137,7 +142,7 @@ export function ArtifactBatchAnalysis({
           <div className="text-center py-6">
             <Loader2 className="h-8 w-8 mx-auto text-accent animate-spin mb-3" />
             <p className="text-sm text-muted-foreground">
-              Analyzing {selectedIds.length} artifacts...
+              {t('analyzing', { count: selectedIds.length })}
             </p>
           </div>
         )}
@@ -146,10 +151,10 @@ export function ArtifactBatchAnalysis({
         {error && (
           <div className="text-center py-6">
             <XCircle className="h-8 w-8 mx-auto text-destructive mb-3" />
-            <p className="text-sm text-destructive mb-2">Batch analysis failed</p>
+            <p className="text-sm text-destructive mb-2">{t('errorTitle')}</p>
             <p className="text-xs text-muted-foreground mb-4">{error.message}</p>
             <button onClick={handleAnalyze} className="text-sm text-accent hover:underline">
-              Try again
+              {t('tryAgain')}
             </button>
           </div>
         )}
@@ -168,7 +173,7 @@ export function ArtifactBatchAnalysis({
                 <div className="flex items-center gap-2 mb-2">
                   <Trophy className="h-4 w-4 text-genshin-gold" />
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Set Bonuses Available
+                    {t('setBonusTitle')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1 mb-2">
@@ -188,8 +193,8 @@ export function ArtifactBatchAnalysis({
             {/* Artifact Rankings */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Ranking</span>
-                <span>{sortedArtifacts.length} artifacts</span>
+                <span>{t('rankingTitle')}</span>
+                <span>{t('artifactCount', { count: sortedArtifacts.length })}</span>
               </div>
 
               <div className="space-y-1">
@@ -204,6 +209,10 @@ export function ArtifactBatchAnalysis({
                 ))}
               </div>
             </div>
+
+            {batchResult.aiResultId && (
+              <AiFeedback aiResultId={batchResult.aiResultId} />
+            )}
           </div>
         )}
       </div>
@@ -220,8 +229,11 @@ interface BatchArtifactRowProps {
 }
 
 function BatchArtifactRow({ summary, artifact, rank, onClick }: BatchArtifactRowProps) {
+  const t = useTranslations('aiBatch');
   const gradeColor = GRADE_COLORS[summary.grade];
   const tierColor = TIER_COLORS[summary.tier];
+  const isNoWeakness =
+    summary.keyWeakness === 'none' || summary.keyWeakness === t('noWeakness');
 
   return (
     <div
@@ -251,7 +263,7 @@ function BatchArtifactRow({ summary, artifact, rank, onClick }: BatchArtifactRow
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground truncate">
-            {artifact?.set.name || 'Unknown Set'}
+            {artifact?.set.name || t('unknownSet')}
           </span>
           <span className={cn('text-xs px-1.5 py-0.5 rounded capitalize', tierColor.bg, tierColor.text)}>
             {summary.tier}
@@ -267,7 +279,7 @@ function BatchArtifactRow({ summary, artifact, rank, onClick }: BatchArtifactRow
       {/* Score */}
       <div className="text-right">
         <div className="text-lg font-bold text-foreground">{summary.score}</div>
-        <div className="text-xs text-muted-foreground">score</div>
+        <div className="text-xs text-muted-foreground">{t('scoreLabel')}</div>
       </div>
 
       {/* Strength/Weakness */}
@@ -276,7 +288,7 @@ function BatchArtifactRow({ summary, artifact, rank, onClick }: BatchArtifactRow
           <CheckCircle2 className="h-3 w-3 shrink-0" />
           <span className="truncate">{summary.keyStrength}</span>
         </div>
-        {summary.keyWeakness !== 'none' && (
+        {!isNoWeakness && (
           <div className="flex items-center gap-1 text-red-400 truncate">
             <XCircle className="h-3 w-3 shrink-0" />
             <span className="truncate">{summary.keyWeakness}</span>

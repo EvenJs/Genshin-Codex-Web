@@ -13,7 +13,7 @@ export interface UseArtifactAnalysisResult {
   isLoading: boolean;
   isAnalyzing: boolean;
   error: Error | null;
-  analyze: (options?: { characterId?: string; skipCache?: boolean }) => Promise<ArtifactAnalysisResult>;
+  analyze: (options?: { characterId?: string; skipCache?: boolean; language?: string }) => Promise<ArtifactAnalysisResult>;
 }
 
 /**
@@ -28,7 +28,7 @@ export function useArtifactAnalysis(
   const [error, setError] = useState<Error | null>(null);
 
   const analyze = useCallback(
-    async (options?: { characterId?: string; skipCache?: boolean }): Promise<ArtifactAnalysisResult> => {
+    async (options?: { characterId?: string; skipCache?: boolean; language?: string }): Promise<ArtifactAnalysisResult> => {
       if (!accountId || !artifactId) {
         throw new Error('Account and artifact IDs are required');
       }
@@ -43,6 +43,9 @@ export function useArtifactAnalysis(
         }
         if (options?.skipCache) {
           params.set('skipCache', 'true');
+        }
+        if (options?.language) {
+          params.set('language', options.language);
         }
 
         const queryString = params.toString();
@@ -79,7 +82,7 @@ export interface UsePotentialEvaluationResult {
   isLoading: boolean;
   isEvaluating: boolean;
   error: Error | null;
-  evaluate: () => Promise<PotentialEvaluationResult>;
+  evaluate: (language?: string) => Promise<PotentialEvaluationResult>;
 }
 
 /**
@@ -93,7 +96,7 @@ export function usePotentialEvaluation(
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const evaluate = useCallback(async (): Promise<PotentialEvaluationResult> => {
+  const evaluate = useCallback(async (language?: string): Promise<PotentialEvaluationResult> => {
     if (!accountId || !artifactId) {
       throw new Error('Account and artifact IDs are required');
     }
@@ -102,9 +105,12 @@ export function usePotentialEvaluation(
     setError(null);
 
     try {
-      const result = await apiFetch<PotentialEvaluationResult>(
-        `/accounts/${accountId}/artifacts/${artifactId}/potential`,
-      );
+      const params = new URLSearchParams();
+      if (language) {
+        params.set('language', language);
+      }
+      const url = `/accounts/${accountId}/artifacts/${artifactId}/potential${params.toString() ? `?${params.toString()}` : ''}`;
+      const result = await apiFetch<PotentialEvaluationResult>(url);
 
       setPotential(result);
       return result;
@@ -130,7 +136,7 @@ export interface UseBatchAnalysisResult {
   batchResult: BatchAnalysisResult | null;
   isAnalyzing: boolean;
   error: Error | null;
-  analyzeBatch: (artifactIds: string[], characterId?: string) => Promise<BatchAnalysisResult>;
+  analyzeBatch: (artifactIds: string[], characterId?: string, language?: string) => Promise<BatchAnalysisResult>;
 }
 
 /**
@@ -142,7 +148,7 @@ export function useBatchAnalysis(accountId: string | null): UseBatchAnalysisResu
   const [error, setError] = useState<Error | null>(null);
 
   const analyzeBatch = useCallback(
-    async (artifactIds: string[], characterId?: string): Promise<BatchAnalysisResult> => {
+    async (artifactIds: string[], characterId?: string, language?: string): Promise<BatchAnalysisResult> => {
       if (!accountId) {
         throw new Error('Account ID is required');
       }
@@ -159,7 +165,7 @@ export function useBatchAnalysis(accountId: string | null): UseBatchAnalysisResu
           `/accounts/${accountId}/artifacts/batch-analyze`,
           {
             method: 'POST',
-            body: JSON.stringify({ artifactIds, characterId }),
+            body: JSON.stringify({ artifactIds, characterId, language }),
           },
         );
 

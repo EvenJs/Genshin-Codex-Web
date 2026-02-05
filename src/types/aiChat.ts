@@ -4,6 +4,7 @@ export interface AiChatResponse {
   aiGenerated: boolean;
   knowledgeUsed: boolean;
   generatedAt: string;
+  aiResultId?: string;
 }
 
 export type AiChatStreamEvent =
@@ -14,5 +15,5 @@ export type AiChatStreamEvent =
       knowledgeUsed: boolean;
     }
   | { type: 'chunk'; content: string }
-  | { type: 'done'; conversationId: string }
+  | { type: 'done'; conversationId: string; aiResultId?: string }
   | { type: 'error'; message: string };

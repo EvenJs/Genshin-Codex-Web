@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Sparkles,
   TrendingUp,
@@ -28,6 +29,7 @@ import {
   PRIORITY_COLORS,
   RISK_COLORS,
 } from '@/types/artifactAnalysis';
+import { AiFeedback } from '@/components/ai/AiFeedback';
 
 interface ArtifactAnalysisProps {
   accountId: string;
@@ -40,6 +42,8 @@ export function ArtifactAnalysis({
   artifact,
   characterId,
 }: ArtifactAnalysisProps) {
+  const t = useTranslations('aiArtifact');
+  const locale = useLocale();
   const [showPotential, setShowPotential] = useState(false);
 
   const {
@@ -57,16 +61,16 @@ export function ArtifactAnalysis({
   } = usePotentialEvaluation(accountId, artifact.id);
 
   const handleAnalyze = async () => {
-    await analyze({ characterId });
+    await analyze({ characterId, language: locale });
   };
 
   const handleEvaluatePotential = async () => {
     setShowPotential(true);
-    await evaluate();
+    await evaluate(locale);
   };
 
   const handleRefresh = async () => {
-    await analyze({ characterId, skipCache: true });
+    await analyze({ characterId, skipCache: true, language: locale });
   };
 
   return (
@@ -75,7 +79,7 @@ export function ArtifactAnalysis({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-genshin-gold" />
-          <h3 className="font-semibold text-foreground">AI Analysis</h3>
+          <h3 className="font-semibold text-foreground">{t('title')}</h3>
         </div>
         {analysis && (
           <button
@@ -84,7 +88,7 @@ export function ArtifactAnalysis({
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <RefreshCw className={cn('h-3 w-3', isAnalyzing && 'animate-spin')} />
-            Refresh
+            {t('refresh')}
           </button>
         )}
       </div>
@@ -95,14 +99,14 @@ export function ArtifactAnalysis({
           <div className="text-center py-6">
             <Sparkles className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
             <p className="text-sm text-muted-foreground mb-4">
-              Get AI-powered insights about this artifact
+              {t('emptyPrompt')}
             </p>
             <button
               onClick={handleAnalyze}
               className="inline-flex items-center gap-2 rounded-md bg-genshin-gold/20 px-4 py-2 text-sm font-medium text-genshin-gold hover:bg-genshin-gold/30 transition-colors"
             >
               <Sparkles className="h-4 w-4" />
-              Analyze Artifact
+              {t('analyzeButton')}
             </button>
           </div>
         )}
@@ -111,7 +115,7 @@ export function ArtifactAnalysis({
         {isAnalyzing && (
           <div className="text-center py-6">
             <Loader2 className="h-8 w-8 mx-auto text-genshin-gold animate-spin mb-3" />
-            <p className="text-sm text-muted-foreground">Analyzing artifact...</p>
+            <p className="text-sm text-muted-foreground">{t('analyzing')}</p>
           </div>
         )}
 
@@ -119,13 +123,13 @@ export function ArtifactAnalysis({
         {analysisError && (
           <div className="text-center py-6">
             <XCircle className="h-8 w-8 mx-auto text-destructive mb-3" />
-            <p className="text-sm text-destructive mb-2">Analysis failed</p>
+            <p className="text-sm text-destructive mb-2">{t('errorTitle')}</p>
             <p className="text-xs text-muted-foreground mb-4">{analysisError.message}</p>
             <button
               onClick={handleAnalyze}
               className="text-sm text-accent hover:underline"
             >
-              Try again
+              {t('tryAgain')}
             </button>
           </div>
         )}
@@ -160,7 +164,7 @@ export function ArtifactAnalysis({
                 >
                   <span className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    Upgrade Potential Analysis
+                    {t('upgradePotential')}
                   </span>
                   {showPotential ? (
                     <ChevronUp className="h-4 w-4" />
@@ -184,6 +188,10 @@ export function ArtifactAnalysis({
                 )}
               </div>
             )}
+
+            {analysis.aiResultId && (
+              <AiFeedback aiResultId={analysis.aiResultId} />
+            )}
           </div>
         )}
       </div>
@@ -193,6 +201,7 @@ export function ArtifactAnalysis({
 
 // Score Display Component
 function ScoreDisplay({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   const gradeColor = GRADE_COLORS[analysis.grade];
 
   return (
@@ -213,10 +222,10 @@ function ScoreDisplay({ analysis }: { analysis: ArtifactAnalysisResult }) {
       <div className="flex-1">
         <div className="flex items-baseline gap-2">
           <span className="text-3xl font-bold text-foreground">{analysis.overallScore}</span>
-          <span className="text-sm text-muted-foreground">/ 100</span>
+          <span className="text-sm text-muted-foreground">{t('scoreSuffix')}</span>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
-          CV: {analysis.subStatAnalysis.critValue} | Rolls: {analysis.subStatAnalysis.effectiveRolls}
+          {t('critValueLabel')}: {analysis.subStatAnalysis.critValue} | {t('rollsLabel')}: {analysis.subStatAnalysis.effectiveRolls}
         </p>
       </div>
     </div>
@@ -225,6 +234,7 @@ function ScoreDisplay({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
 // Main Stat Section
 function MainStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   const ratingIcons: Record<string, React.ReactNode> = {
     optimal: <CheckCircle2 className="h-4 w-4 text-green-400" />,
     good: <CheckCircle2 className="h-4 w-4 text-blue-400" />,
@@ -236,11 +246,13 @@ function MainStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
     <div className="rounded-md bg-muted/30 p-3">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Main Stat
+          {t('mainStat')}
         </span>
         <div className="flex items-center gap-1">
           {ratingIcons[analysis.mainStatAnalysis.rating]}
-          <span className="text-xs capitalize">{analysis.mainStatAnalysis.rating}</span>
+          <span className="text-xs capitalize">
+            {t(`mainStatRating.${analysis.mainStatAnalysis.rating}`)}
+          </span>
         </div>
       </div>
       <p className="text-sm text-foreground">{analysis.mainStatAnalysis.comment}</p>
@@ -250,13 +262,14 @@ function MainStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
 // Sub-Stat Section
 function SubStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   const { subStatAnalysis } = analysis;
 
   return (
     <div className="rounded-md bg-muted/30 p-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Sub-Stats
+          {t('subStats')}
         </span>
         <span
           className={cn(
@@ -268,7 +281,7 @@ function SubStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
                 : 'bg-red-500/20 text-red-400',
           )}
         >
-          {subStatAnalysis.rollQuality} quality
+          {t('rollQualityLabel', { level: t(`rollQuality.${subStatAnalysis.rollQuality}`) })}
         </span>
       </div>
 
@@ -309,6 +322,7 @@ function SubStatSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
 // Potential Section
 function PotentialSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   const { potential } = analysis;
   const tierColor = TIER_COLORS[potential.currentTier];
   const priorityColor = PRIORITY_COLORS[potential.upgradePriority];
@@ -318,7 +332,7 @@ function PotentialSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
       <div className="flex items-center gap-2 mb-2">
         <BarChart3 className="h-4 w-4 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Assessment
+          {t('assessment')}
         </span>
       </div>
 
@@ -327,7 +341,7 @@ function PotentialSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
           {potential.currentTier}
         </span>
         <span className={cn('text-xs px-2 py-0.5 rounded', priorityColor.bg, priorityColor.text)}>
-          {potential.upgradePriority} priority
+          {t('priorityLabel', { level: t(`priority.${potential.upgradePriority}`) })}
         </span>
       </div>
 
@@ -335,7 +349,7 @@ function PotentialSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
       {potential.expectedScoreAt20 && (
         <p className="text-xs text-muted-foreground mt-2">
-          Expected at +20: ~{potential.expectedScoreAt20} points
+          {t('expectedAt20', { score: potential.expectedScoreAt20 })}
         </p>
       )}
     </div>
@@ -344,6 +358,7 @@ function PotentialSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
 // Characters Section
 function CharactersSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   if (analysis.suitableCharacters.length === 0) return null;
 
   return (
@@ -351,7 +366,7 @@ function CharactersSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
       <div className="flex items-center gap-2 mb-2">
         <Users className="h-4 w-4 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Suitable For
+          {t('suitableCharacters')}
         </span>
       </div>
       <div className="flex flex-wrap gap-1">
@@ -370,6 +385,7 @@ function CharactersSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
 
 // Recommendations Section
 function RecommendationsSection({ analysis }: { analysis: ArtifactAnalysisResult }) {
+  const t = useTranslations('aiArtifact');
   if (analysis.recommendations.length === 0) return null;
 
   return (
@@ -377,7 +393,7 @@ function RecommendationsSection({ analysis }: { analysis: ArtifactAnalysisResult
       <div className="flex items-center gap-2 mb-2">
         <Lightbulb className="h-4 w-4 text-muted-foreground" />
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Recommendations
+          {t('recommendations')}
         </span>
       </div>
       <ul className="space-y-1">
@@ -394,6 +410,7 @@ function RecommendationsSection({ analysis }: { analysis: ArtifactAnalysisResult
 
 // Potential Evaluation Display
 function PotentialDisplay({ potential }: { potential: PotentialEvaluationResult }) {
+  const t = useTranslations('aiArtifact');
   const { upgradeScenarios, recommendation, riskAssessment } = potential;
   const priorityColor = PRIORITY_COLORS[recommendation.priority];
   const riskColor = RISK_COLORS[riskAssessment.level];
@@ -403,15 +420,15 @@ function PotentialDisplay({ potential }: { potential: PotentialEvaluationResult 
       {/* Upgrade Scenarios */}
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded bg-green-500/10 p-2 text-center">
-          <div className="text-xs text-green-400 mb-1">Best</div>
+          <div className="text-xs text-green-400 mb-1">{t('bestCase')}</div>
           <div className="text-lg font-bold text-green-400">{upgradeScenarios.bestCase.score}</div>
         </div>
         <div className="rounded bg-yellow-500/10 p-2 text-center">
-          <div className="text-xs text-yellow-400 mb-1">Average</div>
+          <div className="text-xs text-yellow-400 mb-1">{t('averageCase')}</div>
           <div className="text-lg font-bold text-yellow-400">{upgradeScenarios.averageCase.score}</div>
         </div>
         <div className="rounded bg-red-500/10 p-2 text-center">
-          <div className="text-xs text-red-400 mb-1">Worst</div>
+          <div className="text-xs text-red-400 mb-1">{t('worstCase')}</div>
           <div className="text-lg font-bold text-red-400">{upgradeScenarios.worstCase.score}</div>
         </div>
       </div>
@@ -425,7 +442,7 @@ function PotentialDisplay({ potential }: { potential: PotentialEvaluationResult 
             <XCircle className="h-4 w-4 text-red-400" />
           )}
           <span className="text-sm font-medium">
-            {recommendation.shouldUpgrade ? 'Upgrade recommended' : 'Skip upgrade'}
+            {recommendation.shouldUpgrade ? t('upgradeRecommended') : t('skipUpgrade')}
           </span>
           <span className={cn('text-xs px-2 py-0.5 rounded ml-auto', priorityColor.bg, priorityColor.text)}>
             {recommendation.priority}
@@ -433,16 +450,16 @@ function PotentialDisplay({ potential }: { potential: PotentialEvaluationResult 
         </div>
         <p className="text-xs text-muted-foreground mb-2">{recommendation.reasoning}</p>
         <p className="text-xs">
-          <span className="text-muted-foreground">Breakpoint: </span>
+          <span className="text-muted-foreground">{t('breakpointLabel')} </span>
           <span className="text-foreground">{recommendation.breakpoint}</span>
         </p>
       </div>
 
       {/* Risk Assessment */}
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">Risk Level</span>
+        <span className="text-muted-foreground">{t('riskLevel')}</span>
         <span className={cn('px-2 py-0.5 rounded capitalize', riskColor.bg, riskColor.text)}>
-          {riskAssessment.level} ({riskAssessment.goodRollProbability})
+          {t(`risk.${riskAssessment.level}`)} ({riskAssessment.goodRollProbability})
         </span>
       </div>
     </div>

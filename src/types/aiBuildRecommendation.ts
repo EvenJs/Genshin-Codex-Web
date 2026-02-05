@@ -61,6 +61,7 @@ export interface OverallAnalysis {
 }
 
 export interface AiBuildRecommendationResult {
+  aiResultId?: string;
   character: Character;
   builds: RecommendedBuild[];
   overallAnalysis: OverallAnalysis;
@@ -93,6 +94,7 @@ export interface SituationalNotes {
 }
 
 export interface BuildComparisonResult {
+  aiResultId?: string;
   comparison: {
     builds: BuildComparisonBuild[];
     winner: ComparisonWinner;
@@ -105,6 +107,7 @@ export interface BuildComparisonResult {
 }
 
 export interface BuildReasoningResult {
+  aiResultId?: string;
   reasoning: {
     setChoice: {
       explanation: string;

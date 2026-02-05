@@ -23,6 +23,7 @@ export interface ArtifactPotential {
 }
 
 export interface ArtifactAnalysisResult {
+  aiResultId?: string;
   artifactId: string;
   overallScore: number;
   grade: 'S' | 'A' | 'B' | 'C' | 'D';
@@ -50,6 +51,7 @@ export interface SetAnalysis {
 }
 
 export interface BatchAnalysisResult {
+  aiResultId?: string;
   artifacts: BatchArtifactSummary[];
   ranking: string[];
   setAnalysis: SetAnalysis;
@@ -76,6 +78,7 @@ export interface UpgradeRecommendation {
 }
 
 export interface PotentialEvaluationResult {
+  aiResultId?: string;
   artifactId: string;
   currentState: {
     score: number;

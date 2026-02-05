@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, Send, Sparkles, Trash2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Send, Sparkles, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getToken } from '@/lib/authToken';
 import type { AiChatResponse, AiChatStreamEvent } from '@/types/aiChat';
@@ -15,6 +16,8 @@ interface ChatMessage {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
 
 export function AiChatbot() {
+  const t = useTranslations('aiChat');
+  const locale = useLocale();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -53,11 +56,11 @@ export function AiChatbot() {
     try {
       await streamChat(trimmed, assistantMessage.id);
     } catch (err) {
-      const messageText = err instanceof Error ? err.message : 'Failed to send message';
+      const messageText = err instanceof Error ? err.message : t('sendFailed');
       setError(messageText);
       updateAssistantMessage(
         assistantMessage.id,
-        messageText || 'AI response failed. Please try again later.',
+        messageText || t('responseFailed'),
       );
     } finally {
       setIsStreaming(false);
@@ -77,12 +80,13 @@ export function AiChatbot() {
         message,
         conversationId: conversationId ?? undefined,
         stream: true,
+        language: locale,
       }),
     });
 
     if (!response.ok) {
       const fallbackText = await response.text();
-      throw new Error(fallbackText || 'Failed to send message');
+      throw new Error(fallbackText || t('sendFailed'));
     }
 
     const contentType = response.headers.get('Content-Type') ?? '';
@@ -151,7 +155,7 @@ export function AiChatbot() {
       setError(event.message);
       updateAssistantMessage(
         assistantId,
-        event.message || 'AI response failed. Please try again later.',
+        event.message || t('responseFailed'),
       );
     }
   };
@@ -188,8 +192,8 @@ export function AiChatbot() {
             />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">AI Strategy Assistant</p>
-            <p className="text-xs text-muted-foreground">Builds, teams, and optimization advice</p>
+            <p className="text-sm font-semibold text-foreground">{t('title')}</p>
+            <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
           </div>
         </div>
         <button
@@ -198,7 +202,7 @@ export function AiChatbot() {
           className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <Trash2 className="h-3 w-3" />
-          New Chat
+          {t('newChat')}
         </button>
       </div>
 
@@ -206,9 +210,9 @@ export function AiChatbot() {
         {!hasMessages && (
           <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
             <Sparkles className="mx-auto mb-2 h-6 w-6 text-genshin-gold" />
-            <p className="text-sm font-medium text-foreground">Ask anything about your Genshin strategy</p>
+            <p className="text-sm font-medium text-foreground">{t('emptyTitle')}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Example: “给我一个适合那维莱特的深渊队伍”
+              {t('emptyExample')}
             </p>
           </div>
         )}
@@ -270,7 +274,7 @@ export function AiChatbot() {
                 handleSend();
               }
             }}
-            placeholder="Ask about team comps, builds, or progression..."
+            placeholder={t('inputPlaceholder')}
             className="min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-genshin-gold focus:outline-none"
             data-testid="ai-chat-input"
           />
@@ -282,7 +286,7 @@ export function AiChatbot() {
             data-testid="ai-chat-send"
           >
             <Send className="h-4 w-4" />
-            Send
+            {t('send')}
           </button>
         </div>
       </div>

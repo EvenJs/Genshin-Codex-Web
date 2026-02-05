@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   Sparkles,
   RefreshCw,
@@ -31,9 +32,9 @@ import type {
 import {
   VIABILITY_COLORS,
   INVENTORY_QUALITY_COLORS,
-  SET_TYPE_LABELS,
 } from '@/types/aiBuildRecommendation';
 import type { ArtifactSlot } from '@/types/artifact';
+import { AiFeedback } from '@/components/ai/AiFeedback';
 
 interface AiBuildRecommendationProps {
   accountId: string;
@@ -56,6 +57,8 @@ export function AiBuildRecommendation({
   characterName,
   onBuildApplied,
 }: AiBuildRecommendationProps) {
+  const t = useTranslations('aiBuild');
+  const locale = useLocale();
   const [expandedBuild, setExpandedBuild] = useState<number | null>(null);
 
   const {
@@ -64,7 +67,7 @@ export function AiBuildRecommendation({
     error,
     getRecommendations,
     refresh,
-  } = useAiBuildRecommendation(accountId, characterId);
+  } = useAiBuildRecommendation(accountId, characterId, locale);
 
   const {
     isApplying,
@@ -100,7 +103,7 @@ export function AiBuildRecommendation({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-genshin-gold" />
-          <h3 className="font-semibold text-foreground">AI Build Recommendation</h3>
+          <h3 className="font-semibold text-foreground">{t('title')}</h3>
         </div>
         {result && (
           <button
@@ -109,7 +112,7 @@ export function AiBuildRecommendation({
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <RefreshCw className={cn('h-3 w-3', isLoading && 'animate-spin')} />
-            Refresh
+            {t('refresh')}
           </button>
         )}
       </div>
@@ -154,6 +157,7 @@ function InitialState({
   characterName: string;
   onAnalyze: () => void;
 }) {
+  const t = useTranslations('aiBuild');
   return (
     <div className="text-center py-8">
       <div className="relative w-20 h-20 mx-auto mb-4">
@@ -161,50 +165,47 @@ function InitialState({
         <Target className="h-8 w-8 text-genshin-gold absolute bottom-0 right-0" />
       </div>
       <h4 className="font-medium text-foreground mb-2">
-        Get AI Build Recommendations for {characterName}
+        {t('initialTitle', { name: characterName })}
       </h4>
       <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-        Our AI will analyze your artifact inventory and suggest the best builds
-        based on what you have available.
+        {t('initialDescription')}
       </p>
       <button
         onClick={onAnalyze}
         className="inline-flex items-center gap-2 rounded-md bg-genshin-gold/20 px-5 py-2.5 text-sm font-medium text-genshin-gold hover:bg-genshin-gold/30 transition-colors"
       >
         <Sparkles className="h-4 w-4" />
-        Analyze My Artifacts
+        {t('initialAction')}
       </button>
     </div>
   );
 }
 
 function LoadingState() {
+  const t = useTranslations('aiBuild');
   return (
     <div className="text-center py-12">
       <div className="relative w-16 h-16 mx-auto mb-4">
         <Loader2 className="h-16 w-16 text-genshin-gold animate-spin" />
       </div>
-      <p className="text-sm text-muted-foreground mb-2">
-        Analyzing your artifacts...
-      </p>
-      <p className="text-xs text-muted-foreground/70">
-        This may take a moment as we evaluate all possibilities
-      </p>
+      <p className="text-sm text-muted-foreground mb-2">{t('loadingTitle')}</p>
+      <p className="text-xs text-muted-foreground/70">{t('loadingSubtitle')}</p>
     </div>
   );
 }
 
 function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  const t = useTranslations('aiBuild');
   return (
     <div className="text-center py-8">
       <AlertTriangle className="h-12 w-12 mx-auto text-destructive mb-3" />
-      <p className="text-sm text-destructive mb-2">Failed to generate recommendations</p>
+      <p className="text-sm text-destructive mb-2">{t('errorTitle')}</p>
       <p className="text-xs text-muted-foreground mb-4">{error.message}</p>
       <button
         onClick={onRetry}
         className="text-sm text-accent hover:underline"
       >
-        Try again
+        {t('tryAgain')}
       </button>
     </div>
   );
@@ -225,6 +226,7 @@ function RecommendationResults({
   isApplying: boolean;
   applyError: Error | null;
 }) {
+  const t = useTranslations('aiBuild');
   const qualityColor = INVENTORY_QUALITY_COLORS[result.overallAnalysis.inventoryQuality];
 
   return (
@@ -235,16 +237,16 @@ function RecommendationResults({
           <div className="flex items-center gap-2">
             <Package className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Inventory Assessment
+              {t('inventoryAssessment')}
             </span>
           </div>
           <span className={cn('text-xs px-2 py-0.5 rounded capitalize', qualityColor.bg, qualityColor.text)}>
-            {result.overallAnalysis.inventoryQuality}
+            {t(`inventoryQuality.${result.overallAnalysis.inventoryQuality}`)}
           </span>
         </div>
         {result.overallAnalysis.farmingSuggestions.length > 0 && (
           <div className="mt-2">
-            <p className="text-xs text-muted-foreground mb-1">Farming suggestions:</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('farmingSuggestions')}</p>
             <div className="flex flex-wrap gap-1">
               {result.overallAnalysis.farmingSuggestions.map((suggestion, i) => (
                 <span key={i} className="text-xs px-2 py-0.5 rounded bg-accent/10 text-accent">
@@ -257,7 +259,7 @@ function RecommendationResults({
         {result.aiGenerated && (
           <div className="flex items-center gap-1 mt-2 text-xs text-genshin-gold">
             <Sparkles className="h-3 w-3" />
-            AI-Generated
+            {t('aiGenerated')}
           </div>
         )}
       </div>
@@ -266,7 +268,7 @@ function RecommendationResults({
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-muted-foreground" />
-          <h4 className="text-sm font-medium text-foreground">Recommended Builds</h4>
+          <h4 className="text-sm font-medium text-foreground">{t('recommendedBuilds')}</h4>
         </div>
 
         {result.builds.map((build, index) => (
@@ -286,7 +288,7 @@ function RecommendationResults({
       {/* Apply Error */}
       {applyError && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          Failed to apply build: {applyError.message}
+          {t('applyFailed', { message: applyError.message })}
         </div>
       )}
 
@@ -296,7 +298,7 @@ function RecommendationResults({
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Key Missing Pieces
+              {t('missingPieces')}
             </span>
           </div>
           <ul className="space-y-1">
@@ -308,6 +310,10 @@ function RecommendationResults({
             ))}
           </ul>
         </div>
+      )}
+
+      {result.aiResultId && (
+        <AiFeedback aiResultId={result.aiResultId} />
       )}
     </div>
   );
@@ -330,6 +336,7 @@ function BuildCard({
   onApply: () => void;
   isApplying: boolean;
 }) {
+  const t = useTranslations('aiBuild');
   const viabilityColor = VIABILITY_COLORS[build.viability];
 
   return (
@@ -350,11 +357,11 @@ function BuildCard({
             <div className="flex items-center gap-2">
               <span className="font-medium text-foreground">{build.name}</span>
               <span className={cn('text-xs px-2 py-0.5 rounded', viabilityColor.bg, viabilityColor.text)}>
-                {build.viability}
+                {t(`viability.${build.viability}`)}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {SET_TYPE_LABELS[build.setConfiguration.type]} • {build.setConfiguration.primarySet}
+              {t(`setType.${build.setConfiguration.type}`)} • {build.setConfiguration.primarySet}
               {build.setConfiguration.secondarySet && ` + ${build.setConfiguration.secondarySet}`}
             </p>
           </div>
@@ -362,7 +369,7 @@ function BuildCard({
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-sm font-medium text-foreground">{build.totalScore}</div>
-            <div className="text-xs text-muted-foreground">Score</div>
+            <div className="text-xs text-muted-foreground">{t('scoreLabel')}</div>
           </div>
           {isExpanded ? (
             <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -381,7 +388,7 @@ function BuildCard({
           {/* Set Bonus */}
           <div className="rounded-md bg-muted/30 p-3">
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-              Set Bonus
+              {t('setBonus')}
             </div>
             <p className="text-sm text-foreground">{build.setConfiguration.setBonus}</p>
           </div>
@@ -392,22 +399,22 @@ function BuildCard({
               <div className="flex items-center gap-2 mb-1">
                 <BarChart3 className="h-3 w-3 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Estimated Stats
+                  {t('estimatedStats')}
                 </span>
               </div>
               <div className="text-sm text-foreground">
-                <div>CR: {build.statSummary.estimatedCritRate}</div>
-                <div>CD: {build.statSummary.estimatedCritDmg}</div>
+                <div>{t('critRateShort')}: {build.statSummary.estimatedCritRate}</div>
+                <div>{t('critDmgShort')}: {build.statSummary.estimatedCritDmg}</div>
               </div>
             </div>
             <div className="rounded-md bg-muted/30 p-3">
               <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                Recommended Main Stats
+                {t('recommendedMainStats')}
               </div>
               <div className="text-xs text-foreground space-y-0.5">
-                <div>Sands: {build.recommendedMainStats.SANDS}</div>
-                <div>Goblet: {build.recommendedMainStats.GOBLET}</div>
-                <div>Circlet: {build.recommendedMainStats.CIRCLET}</div>
+                <div>{t('slot.SANDS')}: {build.recommendedMainStats.SANDS}</div>
+                <div>{t('slot.GOBLET')}: {build.recommendedMainStats.GOBLET}</div>
+                <div>{t('slot.CIRCLET')}: {build.recommendedMainStats.CIRCLET}</div>
               </div>
             </div>
           </div>
@@ -415,7 +422,7 @@ function BuildCard({
           {/* Sub-Stat Priority */}
           <div>
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Sub-Stat Priority
+              {t('subStatPriority')}
             </div>
             <div className="flex flex-wrap gap-1">
               {build.subStatPriority.map((stat, i) => (
@@ -435,7 +442,7 @@ function BuildCard({
           {/* Selected Artifacts */}
           <div>
             <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              Selected Artifacts
+              {t('selectedArtifacts')}
             </div>
             <div className="grid gap-2">
               {(['FLOWER', 'PLUME', 'SANDS', 'GOBLET', 'CIRCLET'] as ArtifactSlot[]).map((slot) => (
@@ -453,7 +460,7 @@ function BuildCard({
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                AI Reasoning
+                {t('aiReasoning')}
               </span>
             </div>
             <p className="text-sm text-foreground">{build.reasoning}</p>
@@ -463,7 +470,7 @@ function BuildCard({
           {build.improvements.length > 0 && (
             <div>
               <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                Suggested Improvements
+                {t('improvements')}
               </div>
               <ul className="space-y-1">
                 {build.improvements.map((improvement, i) => (
@@ -485,12 +492,12 @@ function BuildCard({
             {isApplying ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Applying...
+                {t('applying')}
               </>
             ) : (
               <>
                 <Play className="h-4 w-4" />
-                Apply This Build
+                {t('applyBuild')}
               </>
             )}
           </button>
@@ -507,6 +514,7 @@ function ArtifactSlotRow({
   slot: ArtifactSlot;
   selection: BuildArtifactSelection;
 }) {
+  const t = useTranslations('aiBuild');
   const hasArtifact = selection.artifactId !== null;
 
   return (
@@ -515,7 +523,7 @@ function ArtifactSlotRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground capitalize">
-            {slot.toLowerCase()}
+            {t(`slot.${slot}`)}
           </span>
           {hasArtifact ? (
             <CheckCircle2 className="h-3 w-3 text-green-400" />

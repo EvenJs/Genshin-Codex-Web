@@ -164,3 +164,15 @@ export async function apiUpload<T>(path: string, file: File, fieldName = 'file')
 
   return response.json();
 }
+
+export const apiClient = {
+  get<T>(path: string) {
+    return apiFetch<T>(path);
+  },
+  post<T>(path: string, body?: unknown) {
+    return apiFetch<T>(path, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  },
+};

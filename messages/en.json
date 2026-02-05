@@ -462,5 +462,160 @@
   "layout": {
     "switchTo": "Switch to {locale}",
     "toggleTheme": "Toggle theme"
+  },
+  "aiChat": {
+    "title": "AI Strategy Assistant",
+    "subtitle": "Builds, teams, and optimization advice",
+    "newChat": "New Chat",
+    "emptyTitle": "Ask anything about your Genshin strategy",
+    "emptyExample": "Example: “Suggest an Abyss team for Neuvillette”",
+    "inputPlaceholder": "Ask about team comps, builds, or progression...",
+    "send": "Send",
+    "sendFailed": "Failed to send message",
+    "responseFailed": "AI response failed. Please try again later."
+  },
+  "aiAssistant": {
+    "title": "AI Strategy Assistant",
+    "subtitle": "Get quick, focused advice for builds, teams, rotations, and progression.",
+    "loginPrompt": "Please sign in to chat with the AI assistant.",
+    "loginAction": "Go to Login"
+  },
+  "aiFeedback": {
+    "title": "Rate this AI suggestion",
+    "subtitle": "Your feedback helps improve recommendations",
+    "selectRating": "Please select a rating",
+    "submit": "Submit feedback",
+    "submitting": "Submitting...",
+    "thanks": "Thanks for the feedback!",
+    "commentPlaceholder": "Optional comment",
+    "submitFailed": "Failed to submit feedback",
+    "ratingLabel": "Rating {value}"
+  },
+  "aiArtifact": {
+    "title": "AI Analysis",
+    "refresh": "Refresh",
+    "emptyPrompt": "Get AI-powered insights about this artifact",
+    "analyzeButton": "Analyze Artifact",
+    "analyzing": "Analyzing artifact...",
+    "errorTitle": "Analysis failed",
+    "tryAgain": "Try again",
+    "upgradePotential": "Upgrade Potential Analysis",
+    "scoreSuffix": "/ 100",
+    "critValueLabel": "CV",
+    "rollsLabel": "Rolls",
+    "mainStat": "Main Stat",
+    "subStats": "Sub-Stats",
+    "potential": "Potential",
+    "assessment": "Assessment",
+    "priorityLabel": "{level} priority",
+    "expectedAt20": "Expected at +20: ~{score} points",
+    "suitableCharacters": "Suitable For",
+    "recommendations": "Recommendations",
+    "rollQualityLabel": "{level} quality",
+    "rollQuality": {
+      "high": "high",
+      "medium": "medium",
+      "low": "low"
+    },
+    "mainStatRating": {
+      "optimal": "optimal",
+      "good": "good",
+      "acceptable": "acceptable",
+      "poor": "poor"
+    },
+    "priority": {
+      "high": "high",
+      "medium": "medium",
+      "low": "low",
+      "skip": "skip"
+    },
+    "risk": {
+      "low": "low",
+      "medium": "medium",
+      "high": "high"
+    },
+    "bestCase": "Best",
+    "averageCase": "Average",
+    "worstCase": "Worst",
+    "upgradeRecommended": "Upgrade recommended",
+    "skipUpgrade": "Skip upgrade",
+    "breakpointLabel": "Breakpoint:",
+    "riskLevel": "Risk Level"
+  },
+  "aiBatch": {
+    "title": "Batch Analysis",
+    "selectedCount": "({count} selected)",
+    "sortLabel": "Sort: {label}",
+    "sort": {
+      "rank": "rank",
+      "grade": "grade",
+      "name": "name"
+    },
+    "emptyPrompt": "Select artifacts to analyze them together",
+    "readyPrompt": "Analyze {count} artifacts at once",
+    "analyzeAll": "Analyze All ({count})",
+    "maxLimit": "Maximum 20 artifacts per batch",
+    "analyzing": "Analyzing {count} artifacts...",
+    "errorTitle": "Batch analysis failed",
+    "tryAgain": "Try again",
+    "setBonusTitle": "Set Bonuses Available",
+    "rankingTitle": "Ranking",
+    "artifactCount": "{count} artifacts",
+    "unknownSet": "Unknown Set",
+    "scoreLabel": "score",
+    "noWeakness": "none"
+  },
+  "aiBuild": {
+    "title": "AI Build Recommendation",
+    "refresh": "Refresh",
+    "initialTitle": "Get AI Build Recommendations for {name}",
+    "initialDescription": "Our AI will analyze your artifact inventory and suggest the best builds based on what you have available.",
+    "initialAction": "Analyze My Artifacts",
+    "loadingTitle": "Analyzing your artifacts...",
+    "loadingSubtitle": "This may take a moment as we evaluate all possibilities",
+    "errorTitle": "Failed to generate recommendations",
+    "tryAgain": "Try again",
+    "inventoryAssessment": "Inventory Assessment",
+    "inventoryQuality": {
+      "excellent": "excellent",
+      "good": "good",
+      "average": "average",
+      "limited": "limited"
+    },
+    "farmingSuggestions": "Farming suggestions:",
+    "aiGenerated": "AI-Generated",
+    "recommendedBuilds": "Recommended Builds",
+    "applyFailed": "Failed to apply build: {message}",
+    "missingPieces": "Key Missing Pieces",
+    "setType": {
+      "4piece": "4-Piece Set",
+      "2plus2": "2+2 Combination",
+      "rainbow": "Rainbow Build"
+    },
+    "scoreLabel": "Score",
+    "setBonus": "Set Bonus",
+    "estimatedStats": "Estimated Stats",
+    "critRateShort": "CR",
+    "critDmgShort": "CD",
+    "recommendedMainStats": "Recommended Main Stats",
+    "subStatPriority": "Sub-Stat Priority",
+    "selectedArtifacts": "Selected Artifacts",
+    "aiReasoning": "AI Reasoning",
+    "improvements": "Suggested Improvements",
+    "applying": "Applying...",
+    "applyBuild": "Apply This Build",
+    "slot": {
+      "FLOWER": "Flower",
+      "PLUME": "Plume",
+      "SANDS": "Sands",
+      "GOBLET": "Goblet",
+      "CIRCLET": "Circlet"
+    },
+    "viability": {
+      "excellent": "excellent",
+      "good": "good",
+      "workable": "workable",
+      "needs-improvement": "needs improvement"
+    }
   }
 }

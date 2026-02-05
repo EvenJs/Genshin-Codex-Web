@@ -462,5 +462,160 @@
   "layout": {
     "switchTo": "切换到{locale}",
     "toggleTheme": "切换主题"
+  },
+  "aiChat": {
+    "title": "AI 策略助手",
+    "subtitle": "配装、队伍与优化建议",
+    "newChat": "新对话",
+    "emptyTitle": "问我任何原神攻略问题",
+    "emptyExample": "示例：“给我一个适合那维莱特的深渊队伍”",
+    "inputPlaceholder": "询问队伍搭配、配装或养成...",
+    "send": "发送",
+    "sendFailed": "发送失败",
+    "responseFailed": "AI 响应失败，请稍后再试。"
+  },
+  "aiAssistant": {
+    "title": "AI 策略助手",
+    "subtitle": "快速获取配装、队伍、循环与养成建议。",
+    "loginPrompt": "请先登录后再与 AI 助手对话。",
+    "loginAction": "前往登录"
+  },
+  "aiFeedback": {
+    "title": "评价这条 AI 建议",
+    "subtitle": "你的反馈将帮助改进推荐",
+    "selectRating": "请选择评分",
+    "submit": "提交反馈",
+    "submitting": "提交中...",
+    "thanks": "感谢你的反馈！",
+    "commentPlaceholder": "可选留言",
+    "submitFailed": "反馈提交失败",
+    "ratingLabel": "评分 {value}"
+  },
+  "aiArtifact": {
+    "title": "AI 分析",
+    "refresh": "刷新",
+    "emptyPrompt": "获取该圣遗物的 AI 分析",
+    "analyzeButton": "分析圣遗物",
+    "analyzing": "正在分析圣遗物...",
+    "errorTitle": "分析失败",
+    "tryAgain": "重试",
+    "upgradePotential": "强化潜力分析",
+    "scoreSuffix": "/ 100",
+    "critValueLabel": "CV",
+    "rollsLabel": "有效词条",
+    "mainStat": "主词条",
+    "subStats": "副词条",
+    "potential": "潜力",
+    "assessment": "综合评估",
+    "priorityLabel": "{level} 优先级",
+    "expectedAt20": "+20 预估：~{score} 分",
+    "suitableCharacters": "适用角色",
+    "recommendations": "建议",
+    "rollQualityLabel": "{level} 品质",
+    "rollQuality": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "mainStatRating": {
+      "optimal": "最佳",
+      "good": "良好",
+      "acceptable": "可接受",
+      "poor": "较差"
+    },
+    "priority": {
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "skip": "跳过"
+    },
+    "risk": {
+      "low": "低",
+      "medium": "中",
+      "high": "高"
+    },
+    "bestCase": "最佳",
+    "averageCase": "平均",
+    "worstCase": "最差",
+    "upgradeRecommended": "推荐强化",
+    "skipUpgrade": "不建议强化",
+    "breakpointLabel": "止损点：",
+    "riskLevel": "风险等级"
+  },
+  "aiBatch": {
+    "title": "批量分析",
+    "selectedCount": "（已选 {count} 件）",
+    "sortLabel": "排序：{label}",
+    "sort": {
+      "rank": "排名",
+      "grade": "评级",
+      "name": "名称"
+    },
+    "emptyPrompt": "选择圣遗物进行批量分析",
+    "readyPrompt": "一次分析 {count} 件圣遗物",
+    "analyzeAll": "开始分析（{count}）",
+    "maxLimit": "单次最多分析 20 件",
+    "analyzing": "正在分析 {count} 件...",
+    "errorTitle": "批量分析失败",
+    "tryAgain": "重试",
+    "setBonusTitle": "可用套装效果",
+    "rankingTitle": "排名",
+    "artifactCount": "{count} 件",
+    "unknownSet": "未知套装",
+    "scoreLabel": "评分",
+    "noWeakness": "暂无明显短板"
+  },
+  "aiBuild": {
+    "title": "AI 配装推荐",
+    "refresh": "刷新",
+    "initialTitle": "为 {name} 生成 AI 配装推荐",
+    "initialDescription": "AI 将分析你的圣遗物库存，并给出最优配装建议。",
+    "initialAction": "开始分析",
+    "loadingTitle": "正在分析你的圣遗物...",
+    "loadingSubtitle": "可能需要一点时间以评估所有方案",
+    "errorTitle": "生成推荐失败",
+    "tryAgain": "重试",
+    "inventoryAssessment": "库存评估",
+    "inventoryQuality": {
+      "excellent": "优秀",
+      "good": "良好",
+      "average": "一般",
+      "limited": "有限"
+    },
+    "farmingSuggestions": "刷取建议：",
+    "aiGenerated": "AI 生成",
+    "recommendedBuilds": "推荐配装",
+    "applyFailed": "应用失败：{message}",
+    "missingPieces": "缺失关键部件",
+    "setType": {
+      "4piece": "4件套",
+      "2plus2": "2+2",
+      "rainbow": "散搭"
+    },
+    "scoreLabel": "评分",
+    "setBonus": "套装效果",
+    "estimatedStats": "预估面板",
+    "critRateShort": "暴率",
+    "critDmgShort": "暴伤",
+    "recommendedMainStats": "推荐主词条",
+    "subStatPriority": "副词条优先级",
+    "selectedArtifacts": "已选圣遗物",
+    "aiReasoning": "AI 理由",
+    "improvements": "改进建议",
+    "applying": "应用中...",
+    "applyBuild": "应用该配装",
+    "slot": {
+      "FLOWER": "生之花",
+      "PLUME": "死之羽",
+      "SANDS": "时之沙",
+      "GOBLET": "空之杯",
+      "CIRCLET": "理之冠"
+    },
+    "viability": {
+      "excellent": "极佳",
+      "good": "良好",
+      "workable": "可用",
+      "needs-improvement": "需改进"
+    }
   }
 }

@@ -13,6 +13,7 @@ import type {
 export interface AiRecommendParams {
   preferences?: BuildPreferences;
   skipCache?: boolean;
+  language?: string;
 }
 
 export interface CompareBuildsParams {
@@ -20,6 +21,7 @@ export interface CompareBuildsParams {
     name: string;
     artifactIds: string[];
   }[];
+  language?: string;
 }
 
 export interface UseAiBuildRecommendationResult {
@@ -41,7 +43,7 @@ export interface UseBuildReasoningResult {
   result: BuildReasoningResult | null;
   isLoading: boolean;
   error: Error | null;
-  generateReasoning: (artifactIds: string[]) => Promise<BuildReasoningResult | null>;
+  generateReasoning: (artifactIds: string[], language?: string) => Promise<BuildReasoningResult | null>;
 }
 
 export interface UseApplyBuildResult {
@@ -55,7 +57,8 @@ export interface UseApplyBuildResult {
  */
 export function useAiBuildRecommendation(
   accountId: string | null,
-  characterId: string | null
+  characterId: string | null,
+  language?: string
 ): UseAiBuildRecommendationResult {
   const [result, setResult] = useState<AiBuildRecommendationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -76,7 +79,7 @@ export function useAiBuildRecommendation(
       try {
         const response = await apiClient.post<AiBuildRecommendationResult>(
           `/accounts/${accountId}/characters/${characterId}/ai-recommend`,
-          params || {}
+          { ...params, language: params?.language ?? language }
         );
         setResult(response);
         return response;
@@ -109,7 +112,8 @@ export function useAiBuildRecommendation(
  */
 export function useBuildComparison(
   accountId: string | null,
-  characterId: string | null
+  characterId: string | null,
+  language?: string
 ): UseBuildComparisonResult {
   const [result, setResult] = useState<BuildComparisonResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -128,7 +132,7 @@ export function useBuildComparison(
       try {
         const response = await apiClient.post<BuildComparisonResult>(
           `/accounts/${accountId}/characters/${characterId}/ai-compare`,
-          params
+          { ...params, language: params.language ?? language }
         );
         setResult(response);
         return response;
@@ -156,14 +160,15 @@ export function useBuildComparison(
  */
 export function useBuildReasoning(
   accountId: string | null,
-  characterId: string | null
+  characterId: string | null,
+  language?: string
 ): UseBuildReasoningResult {
   const [result, setResult] = useState<BuildReasoningResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const generateReasoning = useCallback(
-    async (artifactIds: string[]): Promise<BuildReasoningResult | null> => {
+    async (artifactIds: string[], overrideLanguage?: string): Promise<BuildReasoningResult | null> => {
       if (!accountId || !characterId) {
         setError(new Error('Account ID and Character ID are required'));
         return null;
@@ -175,7 +180,7 @@ export function useBuildReasoning(
       try {
         const response = await apiClient.post<BuildReasoningResult>(
           `/accounts/${accountId}/characters/${characterId}/ai-reasoning`,
-          { artifactIds }
+          { artifactIds, language: overrideLanguage ?? language }
         );
         setResult(response);
         return response;
