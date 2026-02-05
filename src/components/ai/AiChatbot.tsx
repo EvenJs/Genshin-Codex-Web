@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Send, Sparkles, Trash2 } from 'lucide-react';
+import { Gem, Send, Sparkles, Trash2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getToken } from '@/lib/authToken';
 import type { AiChatResponse, AiChatStreamEvent } from '@/types/aiChat';
@@ -180,11 +180,43 @@ export function AiChatbot() {
     setError(null);
   };
 
+  const renderAssistantContent = (content: string) => {
+    const text = content ?? '';
+    const keywordIcons = [
+      { keyword: '圣遗物', Icon: Gem },
+      { keyword: 'artifact', Icon: Gem },
+      { keyword: '角色', Icon: User },
+      { keyword: 'character', Icon: User },
+    ];
+
+    const matchedIcons = keywordIcons.filter(({ keyword }) =>
+      text.toLowerCase().includes(keyword.toLowerCase()),
+    );
+
+    if (matchedIcons.length === 0) {
+      return text || (isStreaming && '...');
+    }
+
+    return (
+      <div className="flex items-start gap-2">
+        <div className="mt-0.5 flex items-center gap-1 text-[#c9a35a]">
+          {matchedIcons.map(({ keyword, Icon }) => (
+            <Icon key={keyword} className="h-4 w-4" />
+          ))}
+        </div>
+        <span>{text || (isStreaming && '...')}</span>
+      </div>
+    );
+  };
+
   return (
-    <div className="rounded-xl border border-border bg-card shadow-sm" data-testid="ai-chatbot">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+    <div
+      className="rounded-2xl border border-[#e2c27a]/60 bg-[#f0ebe3] text-[#32353b] shadow-[0_12px_30px_rgba(50,53,59,0.12)]"
+      data-testid="ai-chatbot"
+    >
+      <div className="flex items-center justify-between border-b border-[#e2c27a]/40 px-4 py-3">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-genshin-gold/15">
+          <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[#e7d7b7]">
             <img
               src="/paimeng.jpeg"
               alt="Paimon"
@@ -192,14 +224,14 @@ export function AiChatbot() {
             />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">{t('title')}</p>
-            <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
+            <p className="text-sm font-semibold text-[#32353b]">{t('title')}</p>
+            <p className="text-xs text-[#6a6d73]">{t('subtitle')}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={handleClear}
-          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 rounded-md border border-[#d8c399] px-2 py-1 text-xs text-[#6a6d73] hover:text-[#32353b]"
         >
           <Trash2 className="h-3 w-3" />
           {t('newChat')}
@@ -208,10 +240,10 @@ export function AiChatbot() {
 
       <div className="max-h-[520px] overflow-y-auto px-4 py-4">
         {!hasMessages && (
-          <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-center">
-            <Sparkles className="mx-auto mb-2 h-6 w-6 text-genshin-gold" />
-            <p className="text-sm font-medium text-foreground">{t('emptyTitle')}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-[#d8c399] bg-white/40 px-4 py-6 text-center">
+            <Sparkles className="mx-auto mb-2 h-6 w-6 text-[#c9a35a]" />
+            <p className="text-sm font-medium text-[#32353b]">{t('emptyTitle')}</p>
+            <p className="mt-1 text-xs text-[#6a6d73]">
               {t('emptyExample')}
             </p>
           </div>
@@ -227,7 +259,7 @@ export function AiChatbot() {
               )}
             >
               {message.role === 'assistant' && (
-                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-genshin-gold/15">
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#e7d7b7]">
                   <img
                     src="/paimeng.jpeg"
                     alt="Paimon"
@@ -238,10 +270,10 @@ export function AiChatbot() {
 
               <div
                 className={cn(
-                  'max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm',
+                  'max-w-[75%] px-4 py-3 text-sm leading-relaxed shadow-sm',
                   message.role === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground',
+                    ? 'rounded-[18px_18px_2px_18px] bg-[linear-gradient(135deg,#b78b2e,#8c5f14)] text-white'
+                    : 'rounded-[18px_18px_18px_2px] border border-[#e2c27a] bg-[rgba(255,255,255,0.65)] text-[#32353b]',
                 )}
                 data-testid={
                   message.role === 'user'
@@ -249,7 +281,9 @@ export function AiChatbot() {
                     : 'ai-chat-message-assistant'
                 }
               >
-                {message.content || (message.role === 'assistant' && isStreaming && '...')}
+                {message.role === 'assistant'
+                  ? renderAssistantContent(message.content)
+                  : message.content}
               </div>
             </div>
           ))}
@@ -258,12 +292,12 @@ export function AiChatbot() {
       </div>
 
       {error && (
-        <div className="border-t border-border px-4 py-2 text-xs text-destructive">
+        <div className="border-t border-[#e2c27a]/40 px-4 py-2 text-xs text-[#b94a48]">
           {error}
         </div>
       )}
 
-      <div className="border-t border-border px-4 py-3">
+      <div className="border-t border-[#e2c27a]/40 px-4 py-3">
         <div className="flex items-end gap-2">
           <textarea
             value={input}
@@ -275,14 +309,14 @@ export function AiChatbot() {
               }
             }}
             placeholder={t('inputPlaceholder')}
-            className="min-h-[48px] flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-genshin-gold focus:outline-none"
+            className="min-h-[48px] flex-1 resize-none rounded-lg border border-[#d8c399] bg-white/70 px-3 py-2 text-sm text-[#32353b] placeholder:text-[#8a8d93] focus:border-[#c9a35a] focus:outline-none"
             data-testid="ai-chat-input"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={!input.trim() || isStreaming}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-genshin-gold px-4 text-sm font-semibold text-black transition-colors hover:bg-genshin-gold/90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[linear-gradient(135deg,#caa65a,#a8782a)] px-4 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             data-testid="ai-chat-send"
           >
             <Send className="h-4 w-4" />
