@@ -220,9 +220,10 @@ export function CharacterCard({ character, onClick, compact = false }: Character
 // Public character card for non-logged-in users
 interface PublicCharacterCardProps {
   character: Character;
+  onClick?: (character: Character) => void;
 }
 
-export function PublicCharacterCard({ character }: PublicCharacterCardProps) {
+export function PublicCharacterCard({ character, onClick }: PublicCharacterCardProps) {
   const tElement = useTranslations('element');
   const tWeapon = useTranslations('weapon');
   const tCommon = useTranslations('common');
@@ -237,7 +238,11 @@ export function PublicCharacterCard({ character }: PublicCharacterCardProps) {
 
   return (
     <div
-      className="rounded-xl border border-border overflow-hidden transition-all duration-200 group cursor-pointer hover:border-primary/50 hover:shadow-lg hover:-translate-y-1"
+      onClick={() => onClick?.(character)}
+      className={cn(
+        'rounded-xl border border-border overflow-hidden transition-all duration-200 group',
+        onClick && 'cursor-pointer hover:border-primary/50 hover:shadow-lg hover:-translate-y-1'
+      )}
       style={{
         background: gradient,
       }}

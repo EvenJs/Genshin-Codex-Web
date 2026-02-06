@@ -99,6 +99,10 @@ export default function CharactersPage() {
     router.push(`/characters/${character.id}`);
   };
 
+  const handlePublicCharacterClick = (character: { id: string }) => {
+    router.push(`/characters/${character.id}`);
+  };
+
   const handleEdit = (character: AccountCharacter, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingCharacter(character);
@@ -328,7 +332,7 @@ export default function CharactersPage() {
                         ) : (
                           <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                             {filteredUnownedCharacters.map((char) => (
-                              <PublicCharacterCard key={char.id} character={char} />
+                              <PublicCharacterCard key={char.id} character={char} onClick={handlePublicCharacterClick} />
                             ))}
                           </div>
                         )}
@@ -352,7 +356,7 @@ export default function CharactersPage() {
                           </h2>
                           <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                             {publicFiveStars.map((char) => (
-                              <PublicCharacterCard key={char.id} character={char} />
+                              <PublicCharacterCard key={char.id} character={char} onClick={handlePublicCharacterClick} />
                             ))}
                           </div>
                         </section>
@@ -367,7 +371,7 @@ export default function CharactersPage() {
                           </h2>
                           <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                             {publicFourStars.map((char) => (
-                              <PublicCharacterCard key={char.id} character={char} />
+                              <PublicCharacterCard key={char.id} character={char} onClick={handlePublicCharacterClick} />
                             ))}
                           </div>
                         </section>
