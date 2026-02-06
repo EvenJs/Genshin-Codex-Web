@@ -10,6 +10,8 @@ export interface Achievement {
   region: string | null;
   rewardPrimogems: number;
   isHidden: boolean;
+  hiddenDescription?: string | null;
+  version?: string | null;
   guide: string | null;
 }
 

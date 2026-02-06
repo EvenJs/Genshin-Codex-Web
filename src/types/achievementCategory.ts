@@ -6,6 +6,7 @@ export interface AchievementCategory {
   icon: string | null;
   background: string | null;
   achievementCount: number;
+  completedCount?: number;
 }
 
 export interface AchievementCategoryListResponse {

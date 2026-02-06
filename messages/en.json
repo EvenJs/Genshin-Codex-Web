@@ -14,7 +14,8 @@
     "next": "Next",
     "unknown": "Unknown",
     "clickAgainToConfirm": "Click again to confirm",
-    "clearAll": "Clear All"
+    "clearAll": "Clear All",
+    "back": "Back"
   },
   "nav": {
     "achievements": "Achievements",
@@ -173,17 +174,26 @@
     "earned": "Earned",
     "searchPlaceholder": "Search achievements...",
     "noAchievements": "No achievements found",
+    "noAchievementsHint": "Try adjusting your search or filters.",
     "done": "Done",
     "categoriesTitle": "Achievement Categories",
     "categoriesSubtitle": "{count} achievements in total",
     "totalCategories": "Categories",
     "totalAchievements": "Total Achievements",
+    "completedPercentage": "Completed",
     "searchCategoriesPlaceholder": "Search categories...",
     "categoriesCount": "{count} categories",
     "noCategories": "No categories found",
+    "noCategoriesHint": "Achievement categories will appear here once available.",
+    "noSearchResults": "No matching categories",
+    "noSearchResultsHint": "Try a different search term or clear the search field.",
     "achievementCount": "{count} achievements",
     "backToCategories": "Back to Categories",
-    "categorySubtitle": "{count} achievements"
+    "categorySubtitle": "{count} achievements",
+    "hideCompleted": "Hide done",
+    "markComplete": "Mark as complete",
+    "markIncomplete": "Mark as incomplete",
+    "virtualScrollHint": "Scroll optimized for large lists"
   },
   "achievementsPage": {
     "titleMy": "My Achievements",
