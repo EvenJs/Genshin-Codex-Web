@@ -22,6 +22,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Genshin Codex',
   description: 'Track your Genshin Impact achievements and progress',
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default async function RootLayout({
