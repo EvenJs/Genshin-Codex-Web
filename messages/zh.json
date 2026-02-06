@@ -13,7 +13,8 @@
     "previous": "上一页",
     "next": "下一页",
     "unknown": "未知",
-    "clickAgainToConfirm": "再次点击确认"
+    "clickAgainToConfirm": "再次点击确认",
+    "clearAll": "清除全部"
   },
   "nav": {
     "achievements": "成就",
@@ -103,7 +104,11 @@
     "editTitle": "编辑角色",
     "addTitle": "添加角色",
     "editDescription": "更新角色等级与命座。",
-    "addDescription": "选择角色并设置等级与命座。"
+    "addDescription": "选择角色并设置等级与命座。",
+    "filters": "筛选",
+    "elementFilter": "元素",
+    "weaponFilter": "武器",
+    "rarityFilter": "稀有度"
   },
   "characterDetail": {
     "title": "角色详情",

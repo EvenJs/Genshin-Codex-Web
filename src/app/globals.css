@@ -181,3 +181,36 @@
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Character card hover animation */
+@layer components {
+  .character-card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  .character-card-hover:hover {
+    transform: translateY(-4px);
+    @apply shadow-lg;
+  }
+}
+
+/* Sticky header backdrop */
+@layer components {
+  .sticky-header {
+    @apply backdrop-blur-sm bg-card/95;
+  }
+}
+
+/* Filter sidebar */
+@layer components {
+  .filter-sidebar {
+    @apply rounded-xl border border-border bg-card shadow-sm;
+  }
+}
+
+/* Modern font weight for character names */
+@layer base {
+  .character-name {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}

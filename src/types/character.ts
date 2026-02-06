@@ -89,3 +89,44 @@ export const WEAPON_TYPE_NAMES: Record<WeaponType, string> = {
   BOW: 'Bow',
   CATALYST: 'Catalyst',
 };
+
+// Element-based gradient backgrounds for cards
+export const ELEMENT_GRADIENTS: Record<Element, string> = {
+  PYRO: 'linear-gradient(180deg, #FFFFFF 0%, #FFF5F5 100%)',
+  HYDRO: 'linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%)',
+  ANEMO: 'linear-gradient(180deg, #FFFFFF 0%, #F0FFF4 100%)',
+  ELECTRO: 'linear-gradient(180deg, #FFFFFF 0%, #FAF5FF 100%)',
+  DENDRO: 'linear-gradient(180deg, #FFFFFF 0%, #F7FFF0 100%)',
+  CRYO: 'linear-gradient(180deg, #FFFFFF 0%, #F0FDFF 100%)',
+  GEO: 'linear-gradient(180deg, #FFFFFF 0%, #FFFBF0 100%)',
+};
+
+// Dark mode gradients
+export const ELEMENT_GRADIENTS_DARK: Record<Element, string> = {
+  PYRO: 'linear-gradient(180deg, #1F1F1F 0%, #2A1A1A 100%)',
+  HYDRO: 'linear-gradient(180deg, #1F1F1F 0%, #1A2533 100%)',
+  ANEMO: 'linear-gradient(180deg, #1F1F1F 0%, #1A2A22 100%)',
+  ELECTRO: 'linear-gradient(180deg, #1F1F1F 0%, #251A2A 100%)',
+  DENDRO: 'linear-gradient(180deg, #1F1F1F 0%, #222A1A 100%)',
+  CRYO: 'linear-gradient(180deg, #1F1F1F 0%, #1A2A2D 100%)',
+  GEO: 'linear-gradient(180deg, #1F1F1F 0%, #2A2518 100%)',
+};
+
+// Character role types
+export type CharacterRole = 'MAIN_DPS' | 'SUB_DPS' | 'SUPPORT' | 'HEALER' | 'SHIELD';
+
+export const ROLE_ICONS: Record<CharacterRole, string> = {
+  MAIN_DPS: '⚔️',
+  SUB_DPS: '🗡️',
+  SUPPORT: '🛡️',
+  HEALER: '💚',
+  SHIELD: '🔰',
+};
+
+export const ROLE_NAMES: Record<CharacterRole, string> = {
+  MAIN_DPS: 'Main DPS',
+  SUB_DPS: 'Sub DPS',
+  SUPPORT: 'Support',
+  HEALER: 'Healer',
+  SHIELD: 'Shielder',
+};

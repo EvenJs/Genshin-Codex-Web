@@ -13,7 +13,8 @@
     "previous": "Previous",
     "next": "Next",
     "unknown": "Unknown",
-    "clickAgainToConfirm": "Click again to confirm"
+    "clickAgainToConfirm": "Click again to confirm",
+    "clearAll": "Clear All"
   },
   "nav": {
     "achievements": "Achievements",
@@ -103,7 +104,11 @@
     "editTitle": "Edit Character",
     "addTitle": "Add Character",
     "editDescription": "Update character level and constellation.",
-    "addDescription": "Select a character and set their level and constellation."
+    "addDescription": "Select a character and set their level and constellation.",
+    "filters": "Filters",
+    "elementFilter": "Element",
+    "weaponFilter": "Weapon",
+    "rarityFilter": "Rarity"
   },
   "characterDetail": {
     "title": "Character Details",

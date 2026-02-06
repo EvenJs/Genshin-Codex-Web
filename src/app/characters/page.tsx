@@ -15,32 +15,23 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { CharacterCard } from '@/components/characters/CharacterCard';
+import { CharacterCard, PublicCharacterCard } from '@/components/characters/CharacterCard';
 import { CharacterForm } from '@/components/characters/CharacterForm';
-import { Search, Users, Plus, Pencil, Trash2, LogIn } from 'lucide-react';
+import { FilterSidebar } from '@/components/characters/FilterSidebar';
+import { Search, Users, Plus, Pencil, Trash2, LogIn, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Character, AccountCharacter, Element, WeaponType, CreateAccountCharacterDto, UpdateAccountCharacterDto } from '@/types/character';
-import { ELEMENT_COLORS } from '@/types/character';
-
-const ELEMENTS: Element[] = ['PYRO', 'HYDRO', 'ANEMO', 'ELECTRO', 'DENDRO', 'CRYO', 'GEO'];
-const WEAPON_TYPES: WeaponType[] = ['SWORD', 'CLAYMORE', 'POLEARM', 'BOW', 'CATALYST'];
-
-const ELEMENT_ICONS: Record<Element, string> = {
-  PYRO: '🔥',
-  HYDRO: '💧',
-  ANEMO: '🌀',
-  ELECTRO: '⚡',
-  DENDRO: '🌿',
-  CRYO: '❄️',
-  GEO: '🪨',
-};
+import type {
+  AccountCharacter,
+  Element,
+  WeaponType,
+  CreateAccountCharacterDto,
+  UpdateAccountCharacterDto,
+} from '@/types/character';
 
 export default function CharactersPage() {
   const router = useRouter();
   const mounted = useMounted();
   const tPage = useTranslations('charactersPage');
-  const tElement = useTranslations('element');
-  const tWeapon = useTranslations('weapon');
   const tCommon = useTranslations('common');
   const { isLoggedIn, isLoading: authLoading, selectedAccountId, accountsLoading } = useAuth();
 
@@ -75,7 +66,8 @@ export default function CharactersPage() {
 
   // Filter all characters (public data)
   const filteredAllCharacters = allCharacters.filter((c) => {
-    const matchesSearch = !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery || c.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesElement = !selectedElement || c.element === selectedElement;
     const matchesWeapon = !selectedWeapon || c.weaponType === selectedWeapon;
     const matchesRarity = !selectedRarity || c.rarity === selectedRarity;
@@ -87,8 +79,12 @@ export default function CharactersPage() {
   // Filter user characters
   const filteredAllCharacterIds = new Set(filteredAllCharacters.map((c) => c.id));
   const ownedCharacterIds = new Set(userCharacters.map((c) => c.character.id));
-  const filteredOwnedCharacters = userCharacters.filter((c) => filteredAllCharacterIds.has(c.character.id));
-  const filteredUnownedCharacters = filteredAllCharacters.filter((c) => !ownedCharacterIds.has(c.id));
+  const filteredOwnedCharacters = userCharacters.filter((c) =>
+    filteredAllCharacterIds.has(c.character.id)
+  );
+  const filteredUnownedCharacters = filteredAllCharacters.filter(
+    (c) => !ownedCharacterIds.has(c.id)
+  );
 
   // Group by rarity
   const publicFiveStars = filteredPublicCharacters.filter((c) => c.rarity === 5);
@@ -124,7 +120,9 @@ export default function CharactersPage() {
     }
   };
 
-  const handleFormSubmit = async (data: CreateAccountCharacterDto | UpdateAccountCharacterDto) => {
+  const handleFormSubmit = async (
+    data: CreateAccountCharacterDto | UpdateAccountCharacterDto
+  ) => {
     setIsSubmitting(true);
     try {
       if (editingCharacter) {
@@ -150,31 +148,67 @@ export default function CharactersPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-sm">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          {/* Title Row */}
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-xl font-bold text-foreground">
               {isUserMode ? tPage('titleMy') : tPage('titleAll')}
             </h1>
             {isUserMode && (
-              <Button onClick={() => setIsFormOpen(true)} size="sm">
+              <Button onClick={() => setIsFormOpen(true)} size="sm" className="rounded-xl">
                 <Plus className="h-4 w-4 mr-1" />
                 {tPage('addButton')}
               </Button>
             )}
           </div>
+
+          {/* Search & Stats Row */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder={tPage('searchPlaceholder')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-input bg-background pl-10 pr-4 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              />
+            </div>
+
+            {/* Stats */}
+            <div className="flex gap-2 shrink-0">
+              <StatBadge
+                value={isUserMode ? filteredAllCharacters.length : allCharacters.length}
+                label={tPage('statsTotalAll')}
+                icon={<Users className="h-3.5 w-3.5" />}
+              />
+              <StatBadge
+                value={isUserMode ? allFiveStars.length : publicFiveStars.length}
+                label={tPage('fiveStar')}
+                variant="gold"
+              />
+              <StatBadge
+                value={isUserMode ? allFourStars.length : publicFourStars.length}
+                label={tPage('fourStar')}
+                variant="purple"
+                className="hidden sm:flex"
+              />
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
+      {/* Main Content */}
+      <main className="mx-auto max-w-7xl px-4 py-4">
         {/* Login prompt for guests */}
         {!authLoading && !isLoggedIn && (
-          <div className="mb-4 rounded-lg border border-border bg-card p-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {tPage('loginPrompt')}
-            </p>
+          <div className="mb-4 rounded-xl border border-border bg-card p-3 flex items-center justify-between shadow-sm">
+            <p className="text-sm text-muted-foreground">{tPage('loginPrompt')}</p>
             <Link href="/login">
-              <Button size="sm" variant="outline">
+              <Button size="sm" variant="outline" className="rounded-xl">
                 <LogIn className="h-4 w-4 mr-1" />
                 {tPage('loginCta')}
               </Button>
@@ -182,247 +216,169 @@ export default function CharactersPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-3">
-          <StatCard
-            value={isUserMode ? filteredAllCharacters.length : allCharacters.length}
-            label={isUserMode ? tPage('statsTotalAll') : tPage('statsTotalAll')}
-            icon={<Users className="h-4 w-4" />}
+        {/* Content with Sidebar */}
+        <div className="flex gap-6">
+          {/* Filter Sidebar */}
+          <FilterSidebar
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
+            selectedWeapon={selectedWeapon}
+            setSelectedWeapon={setSelectedWeapon}
+            selectedRarity={selectedRarity}
+            setSelectedRarity={setSelectedRarity}
+            showWeaponFilter={!isUserMode}
+            showRarityFilter={!isUserMode}
           />
-          <StatCard
-            value={isUserMode ? allFiveStars.length : publicFiveStars.length}
-            label={tPage('fiveStar')}
-            variant="gold"
-          />
-          <StatCard
-            value={isUserMode ? allFourStars.length : publicFourStars.length}
-            label={tPage('fourStar')}
-            variant="purple"
-            className="hidden sm:block"
-          />
-        </div>
 
-        {/* Search */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder={tPage('searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-input bg-card pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-        </div>
+          {/* Character Grid */}
+          <div className="flex-1 min-w-0">
+            {/* Loading */}
+            {isLoading && (
+              <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
+            )}
 
-        {/* Element filter */}
-        <div className="mb-4 sm:mb-6 flex gap-1 overflow-x-auto pb-1">
-          <Button
-            variant={selectedElement === '' ? 'default' : 'secondary'}
-            size="sm"
-            onClick={() => setSelectedElement('')}
-          >
-            {tCommon('all')}
-          </Button>
-          {ELEMENTS.map((element) => (
-            <Button
-              key={element}
-              variant={selectedElement === element ? 'default' : 'secondary'}
-              size="sm"
-              onClick={() => setSelectedElement(element)}
-            >
-              {ELEMENT_ICONS[element]} {tElement(element)}
-            </Button>
-          ))}
-        </div>
+            {/* Error */}
+            {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
 
-        {/* Additional filters for public mode */}
-        {!isUserMode && (
-          <div className="mb-4 sm:mb-6 space-y-2">
-            {/* Weapon filter */}
-            <div className="flex gap-1 overflow-x-auto pb-1">
-              <Button
-                variant={selectedWeapon === '' ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => setSelectedWeapon('')}
-              >
-                {tPage('allWeapons')}
-              </Button>
-              {WEAPON_TYPES.map((weapon) => (
-                <Button
-                  key={weapon}
-                  variant={selectedWeapon === weapon ? 'default' : 'secondary'}
-                  size="sm"
-                  onClick={() => setSelectedWeapon(weapon)}
-                >
-                  {tWeapon(weapon)}
-                </Button>
-              ))}
-            </div>
-
-            {/* Rarity filter */}
-            <div className="flex gap-1">
-              <Button
-                variant={selectedRarity === '' ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => setSelectedRarity('')}
-              >
-                {tPage('allRarities')}
-              </Button>
-              <Button
-                variant={selectedRarity === 5 ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => setSelectedRarity(5)}
-                className={selectedRarity === 5 ? '' : 'text-amber-500'}
-              >
-                ★★★★★
-              </Button>
-              <Button
-                variant={selectedRarity === 4 ? 'default' : 'secondary'}
-                size="sm"
-                onClick={() => setSelectedRarity(4)}
-                className={selectedRarity === 4 ? '' : 'text-purple-500'}
-              >
-                ★★★★
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Loading */}
-        {isLoading && (
-          <div className="py-12 text-center text-muted-foreground">{tCommon('loading')}</div>
-        )}
-
-        {/* Error */}
-        {error && <div className="py-12 text-center text-destructive">{error.message}</div>}
-
-        {/* Character list */}
-        {!isLoading && !error && (
-          <>
-            <div className="mb-4 text-sm text-muted-foreground">
-              {tPage('charactersCount', {
-                count: isUserMode ? filteredAllCharacters.length : filteredPublicCharacters.length,
-              })}
-            </div>
-
-            {isUserMode ? (
-              // User characters view (owned + unowned)
-              filteredAllCharacters.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  {tPage('noCharactersFound')}
+            {/* Character list */}
+            {!isLoading && !error && (
+              <>
+                <div className="mb-3 text-sm text-muted-foreground">
+                  {tPage('charactersCount', {
+                    count: isUserMode
+                      ? filteredAllCharacters.length
+                      : filteredPublicCharacters.length,
+                  })}
                 </div>
-              ) : (
-                <div className="space-y-6">
-                  <section>
-                    <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      {tPage('sectionOwned', { count: filteredOwnedCharacters.length })}
-                    </h2>
-                    {filteredOwnedCharacters.length === 0 ? (
-                      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                        <div>{tPage('emptyUser')}</div>
-                        {userCharacters.length === 0 && (
-                          <div className="mt-4">
-                            <Button onClick={() => setIsFormOpen(true)} size="sm">
-                              <Plus className="h-4 w-4 mr-1" />
-                              {tPage('addCharacter')}
-                            </Button>
+
+                {isUserMode ? (
+                  // User characters view (owned + unowned)
+                  filteredAllCharacters.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                      {tPage('noCharactersFound')}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Owned Characters Section */}
+                      <section>
+                        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                          {tPage('sectionOwned', { count: filteredOwnedCharacters.length })}
+                        </h2>
+                        {filteredOwnedCharacters.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                            <div>{tPage('emptyUser')}</div>
+                            {userCharacters.length === 0 && (
+                              <div className="mt-4">
+                                <Button
+                                  onClick={() => setIsFormOpen(true)}
+                                  size="sm"
+                                  className="rounded-xl"
+                                >
+                                  <Plus className="h-4 w-4 mr-1" />
+                                  {tPage('addCharacter')}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                            {filteredOwnedCharacters.map((char) => (
+                              <div key={char.id} className="group relative">
+                                <CharacterCard character={char} onClick={handleCharacterClick} />
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => handleEdit(char, e)}
+                                    className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm backdrop-blur-sm"
+                                    title={tCommon('edit')}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleDelete(char.id, e)}
+                                    className={cn(
+                                      'rounded-lg p-1.5 shadow-sm transition-colors backdrop-blur-sm',
+                                      deleteConfirm === char.id
+                                        ? 'bg-destructive text-destructive-foreground'
+                                        : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
+                                    )}
+                                    title={
+                                      deleteConfirm === char.id
+                                        ? tCommon('clickAgainToConfirm')
+                                        : tCommon('delete')
+                                    }
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {filteredOwnedCharacters.map((char) => (
-                          <div key={char.id} className="group relative">
-                            <CharacterCard character={char} onClick={handleCharacterClick} />
-                            <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={(e) => handleEdit(char, e)}
-                                className="rounded-lg bg-card/90 p-1.5 text-muted-foreground hover:text-foreground hover:bg-card shadow-sm"
-                                title={tCommon('edit')}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDelete(char.id, e)}
-                                className={cn(
-                                  'rounded-lg p-1.5 shadow-sm transition-colors',
-                                  deleteConfirm === char.id
-                                    ? 'bg-destructive text-destructive-foreground'
-                                    : 'bg-card/90 text-muted-foreground hover:text-destructive hover:bg-card'
-                                )}
-                                title={deleteConfirm === char.id ? tCommon('clickAgainToConfirm') : tCommon('delete')}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
+                      </section>
+
+                      {/* Unowned Characters Section */}
+                      <section>
+                        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                          {tPage('sectionUnowned', { count: filteredUnownedCharacters.length })}
+                        </h2>
+                        {filteredUnownedCharacters.length === 0 ? (
+                          <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
+                            {tPage('noCharactersFound')}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </section>
+                        ) : (
+                          <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                            {filteredUnownedCharacters.map((char) => (
+                              <PublicCharacterCard key={char.id} character={char} />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    </div>
+                  )
+                ) : (
+                  // Public characters view
+                  filteredPublicCharacters.length === 0 ? (
+                    <div className="py-12 text-center text-muted-foreground">
+                      {tPage('noCharactersFound')}
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* 5-Star Characters */}
+                      {publicFiveStars.length > 0 && (
+                        <section>
+                          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <span className="text-amber-500">★★★★★</span>{' '}
+                            {tPage('sectionFiveStar', { count: publicFiveStars.length })}
+                          </h2>
+                          <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                            {publicFiveStars.map((char) => (
+                              <PublicCharacterCard key={char.id} character={char} />
+                            ))}
+                          </div>
+                        </section>
+                      )}
 
-                  <section>
-                    <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      {tPage('sectionUnowned', { count: filteredUnownedCharacters.length })}
-                    </h2>
-                    {filteredUnownedCharacters.length === 0 ? (
-                      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-center text-sm text-muted-foreground">
-                        {tPage('noCharactersFound')}
-                      </div>
-                    ) : (
-                      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {filteredUnownedCharacters.map((char) => (
-                          <PublicCharacterCard key={char.id} character={char} />
-                        ))}
-                      </div>
-                    )}
-                  </section>
-                </div>
-              )
-            ) : (
-              // Public characters view
-              filteredPublicCharacters.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                  {tPage('noCharactersFound')}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* 5-Star Characters */}
-                  {publicFiveStars.length > 0 && (
-                    <section>
-                      <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-amber-500">★★★★★</span>{' '}
-                        {tPage('sectionFiveStar', { count: publicFiveStars.length })}
-                      </h2>
-                      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {publicFiveStars.map((char) => (
-                          <PublicCharacterCard key={char.id} character={char} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  {/* 4-Star Characters */}
-                  {publicFourStars.length > 0 && (
-                    <section>
-                      <h2 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <span className="text-purple-500">★★★★</span>{' '}
-                        {tPage('sectionFourStar', { count: publicFourStars.length })}
-                      </h2>
-                      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {publicFourStars.map((char) => (
-                          <PublicCharacterCard key={char.id} character={char} />
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                </div>
-              )
+                      {/* 4-Star Characters */}
+                      {publicFourStars.length > 0 && (
+                        <section>
+                          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                            <span className="text-purple-500">★★★★</span>{' '}
+                            {tPage('sectionFourStar', { count: publicFourStars.length })}
+                          </h2>
+                          <div className="grid gap-2.5 grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+                            {publicFourStars.map((char) => (
+                              <PublicCharacterCard key={char.id} character={char} />
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  )
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </main>
 
       {/* Add/Edit Character Sheet (user mode only) */}
@@ -452,69 +408,8 @@ export default function CharactersPage() {
   );
 }
 
-interface PublicCharacterCardProps {
-  character: Character;
-}
-
-function PublicCharacterCard({ character }: PublicCharacterCardProps) {
-  const tElement = useTranslations('element');
-  const tWeapon = useTranslations('weapon');
-  const tCommon = useTranslations('common');
-  const elementColor = ELEMENT_COLORS[character.element];
-  const avatarUrl = character.imageUrl;
-
-  return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
-      <div className="h-1.5" style={{ backgroundColor: elementColor }} />
-      <div className="p-3">
-        <div className="flex justify-center mb-2">
-          <div
-            className="flex h-14 w-14 items-center justify-center rounded-lg text-2xl overflow-hidden"
-            style={{ backgroundColor: `${elementColor}20` }}
-          >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={character.name}
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              ELEMENT_ICONS[character.element]
-            )}
-          </div>
-        </div>
-        <h3 className="font-semibold text-foreground text-center text-sm truncate">
-          {character.name}
-        </h3>
-        <div className="mt-1 text-center text-xs text-muted-foreground">
-          {tElement(character.element)} ·{' '}
-          {character.weaponType ? tWeapon(character.weaponType) : tCommon('unknown')}
-        </div>
-        {character.rarity && (
-          <div className="mt-1 flex justify-center">
-            <span
-              className={cn(
-                'text-xs',
-                character.rarity === 5 ? 'text-amber-500' : 'text-purple-500'
-              )}
-            >
-              {'★'.repeat(character.rarity)}
-            </span>
-          </div>
-        )}
-        {character.region && (
-          <div className="mt-1 text-center text-xs text-muted-foreground">
-            {character.region}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface StatCardProps {
+// Compact stat badge for header
+interface StatBadgeProps {
   value: number;
   label: string;
   variant?: 'default' | 'gold' | 'purple';
@@ -522,21 +417,28 @@ interface StatCardProps {
   className?: string;
 }
 
-function StatCard({ value, label, variant = 'default', icon, className }: StatCardProps) {
+function StatBadge({ value, label, variant = 'default', icon, className }: StatBadgeProps) {
   return (
-    <div className={cn('rounded-lg border border-border bg-card p-3 sm:p-4', className)}>
-      <div
+    <div
+      className={cn(
+        'flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-1.5',
+        className
+      )}
+    >
+      <span
         className={cn(
-          'text-xl sm:text-2xl font-bold flex items-center gap-1',
+          'text-base font-bold flex items-center gap-1',
           variant === 'gold' && 'text-amber-500',
           variant === 'purple' && 'text-purple-500',
           variant === 'default' && 'text-foreground'
         )}
       >
-        {value}
+        {variant === 'gold' && <Star className="h-3.5 w-3.5 fill-current" />}
+        {variant === 'purple' && <Star className="h-3.5 w-3.5 fill-current" />}
         {icon}
-      </div>
-      <div className="text-xs sm:text-sm text-muted-foreground">{label}</div>
+        {value}
+      </span>
+      <span className="text-xs text-muted-foreground hidden sm:inline">{label}</span>
     </div>
   );
 }
